@@ -1,8 +1,9 @@
-import { appMeta, navigation, pages, quickPrompts, recentChats, sharedPanels } from './data.js';
+import { appMeta, navigation, pages, quickPrompts, recentChats, conversations, conversationPanels, sharedPanels } from './data.js';
 
 const state = {
   page: 'home',
   panelTab: pages.home.defaultPanel,
+  activeConversationId: null,
 };
 
 const app = document.querySelector('#app');
@@ -42,6 +43,10 @@ function actionTarget(label) {
     '生成任务': 'tasks',
     '修改问题': 'analysis',
     '查看全部提醒': 'home',
+    '查看全部任务': 'tasks',
+    '查看回看': 'tasks',
+    '生成周报素材': 'reports',
+    '标记处理中': 'tasks',
   };
   return map[label] || null;
 }
@@ -51,8 +56,16 @@ function interactiveAttrs(label) {
   return target ? `data-page="${target}"` : 'data-action="noop"';
 }
 
+function activeConversation() {
+  return state.activeConversationId ? conversations[state.activeConversationId] : null;
+}
 
 function panelItemsForCurrentPage() {
+  if (state.activeConversationId) {
+    const scopedPanels = conversationPanels[state.activeConversationId] || {};
+    return scopedPanels[state.panelTab] || [];
+  }
+
   const byPage = {
     home: {
       alerts: sharedPanels.alerts,
@@ -174,7 +187,7 @@ function renderLeftNav() {
           ${navigation
             .map(
               (item) => `
-              <button class="nav-btn ${state.page === item.id ? 'active' : ''}" data-page="${item.id}">
+              <button class="nav-btn ${!state.activeConversationId && state.page === item.id ? 'active' : ''}" data-page="${item.id}">
                 <span class="nav-label">${escapeHtml(item.label)}</span>
                 <span class="nav-meta">${navMeta(item.id)}</span>
               </button>
@@ -188,7 +201,15 @@ function renderLeftNav() {
         <div class="simple-list">
           ${recentChats
             .map(
-              (item, index) => `<button class="link-btn" data-page="${navigation[index]?.id || 'analysis'}">${escapeHtml(item)}</button>`,
+              (item) => `
+                <button class="link-btn chat-link ${item.unread ? 'unread' : ''} ${state.activeConversationId === item.id ? 'active' : ''}" data-page="${item.page}" data-conversation="${item.id}">
+                  <span class="chat-link-top">
+                    <span class="chat-link-title">${escapeHtml(item.title)}</span>
+                    <span class="chat-link-time">${escapeHtml(item.time)}</span>
+                  </span>
+                  <span class="chat-link-summary">${escapeHtml(item.summary)}</span>
+                  ${item.unread ? `<span class="chat-link-badge">+${escapeHtml(item.unread)}</span>` : ''}
+                </button>`,
             )
             .join('')}
         </div>
@@ -273,7 +294,186 @@ function renderPrompts(title, prompts, variant = 'prompt') {
   `;
 }
 
+function renderStructuredCard(card) {
+  switch (card.type) {
+    case 'summary':
+      return `
+        <div class="message-card summary-card">
+          <div class="message-card-head">
+            <strong>${escapeHtml(card.title)}</strong>
+            ${card.badge ? `<span class="status-badge ok">${escapeHtml(card.badge)}</span>` : ''}
+          </div>
+          ${card.lines?.length ? `<ul>${card.lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>` : ''}
+        </div>
+      `;
+    case 'kpis':
+      return `
+        <div class="message-card">
+          <div class="message-card-head">
+            <strong>${escapeHtml(card.title)}</strong>
+            ${card.badge ? `<span class="status-badge">${escapeHtml(card.badge)}</span>` : ''}
+          </div>
+          <div class="mini-kpi-grid">
+            ${card.items.map((item) => `
+              <div class="mini-kpi">
+                <span>${escapeHtml(item.label)}</span>
+                <strong>${escapeHtml(item.value)}</strong>
+                ${item.change ? `<em class="${item.trend || ''}">${escapeHtml(item.change)}</em>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    case 'bars':
+      return `
+        <div class="message-card">
+          <div class="message-card-head">
+            <strong>${escapeHtml(card.title)}</strong>
+            ${card.badge ? `<span class="status-badge">${escapeHtml(card.badge)}</span>` : ''}
+          </div>
+          <div class="bar-chart">
+            ${card.items.map((item) => `
+              <div class="bar-row">
+                <div class="bar-row-top">
+                  <span>${escapeHtml(item.label)}</span>
+                  <strong>${escapeHtml(item.valueLabel || item.value)}</strong>
+                </div>
+                <div class="bar-track"><div class="bar-fill ${item.tone || ''}" style="width:${Number(item.value) || 0}%"></div></div>
+                ${item.meta ? `<div class="bar-meta">${escapeHtml(item.meta)}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    case 'table':
+      return `
+        <div class="message-card table-card">
+          <div class="message-card-head">
+            <strong>${escapeHtml(card.title)}</strong>
+            ${card.badge ? `<span class="status-badge">${escapeHtml(card.badge)}</span>` : ''}
+          </div>
+          <div class="mini-table-wrap">
+            <table class="mini-table">
+              <thead><tr>${card.columns.map((col) => `<th>${escapeHtml(col)}</th>`).join('')}</tr></thead>
+              <tbody>
+                ${card.rows.map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    case 'task':
+      return `
+        <div class="message-card task-card">
+          <div class="message-card-head">
+            <strong>${escapeHtml(card.title)}</strong>
+            <span class="status-badge warn">${escapeHtml(card.status || '待确认')}</span>
+          </div>
+          <div class="task-fields">
+            ${card.fields.map((item) => `
+              <div class="task-field">
+                <span>${escapeHtml(item.label)}</span>
+                <strong>${escapeHtml(item.value)}</strong>
+              </div>
+            `).join('')}
+          </div>
+          ${card.actions?.length ? `<div class="chip-row">${card.actions.map((item) => `<button class="chip" ${interactiveAttrs(item)}>${escapeHtml(item)}</button>`).join('')}</div>` : ''}
+        </div>
+      `;
+    case 'agent':
+      return `
+        <div class="message-card agent-card">
+          <div class="message-card-head">
+            <strong>${escapeHtml(card.title)}</strong>
+            <span class="status-badge ok">${escapeHtml(card.status || '执行中')}</span>
+          </div>
+          <div class="agent-steps">
+            ${card.steps.map((step) => `
+              <div class="agent-step">
+                <span class="agent-dot ${step.status || ''}"></span>
+                <span>${escapeHtml(step.text)}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    default:
+      return `
+        <div class="message-card">
+          <div class="message-card-head">
+            <strong>${escapeHtml(card.title || '信息卡')}</strong>
+          </div>
+          ${card.lines?.map((line) => `<p>${escapeHtml(line)}</p>`).join('') || ''}
+        </div>
+      `;
+  }
+}
+
 function renderConversation(conversation) {
+  if (conversation.messages?.length) {
+    return `
+      <section class="card conversation-workspace">
+        <div class="conversation-head">
+          <div>
+            <h2>${escapeHtml(conversation.title || '默认对话流')}</h2>
+            ${conversation.meta ? `<p class="helper-text">${escapeHtml(conversation.meta)}</p>` : ''}
+          </div>
+          <div class="conversation-actions">
+            <button class="secondary-btn" data-action="noop">生成简报</button>
+            <button class="secondary-btn" data-action="noop">同步协作</button>
+          </div>
+        </div>
+        <div class="conversation-thread">
+          ${conversation.messages
+            .map(
+              (message) => `
+                <div class="message-bubble ${escapeHtml(message.role)}">
+                  <div class="message-meta">
+                    <div class="message-meta-main">
+                      <strong>${escapeHtml(message.label || message.role)}</strong>
+                      ${message.badge ? `<span class="status-badge ${message.role === 'ai' ? 'ok' : ''}">${escapeHtml(message.badge)}</span>` : ''}
+                    </div>
+                    ${message.time ? `<span>${escapeHtml(message.time)}</span>` : ''}
+                  </div>
+                  <p>${escapeHtml(message.content)}</p>
+                  ${message.highlights?.length ? `<div class="tag-row">${message.highlights.map((item) => `<span class="tag strong">${escapeHtml(item)}</span>`).join('')}</div>` : ''}
+                  ${message.cards?.length ? `<div class="message-card-stack">${message.cards.map((card) => renderStructuredCard(card)).join('')}</div>` : ''}
+                  ${message.actions?.length ? `<div class="chip-row">${message.actions.map((item) => `<button class="chip" ${interactiveAttrs(item)}>${escapeHtml(item)}</button>`).join('')}</div>` : ''}
+                </div>
+              `,
+            )
+            .join('')}
+        </div>
+        ${conversation.artifacts?.length ? `
+          <div class="artifact-grid">
+            ${conversation.artifacts
+              .map(
+                (artifact) => `
+                  <div class="detail-card artifact-card">
+                    <header>
+                      <strong>${escapeHtml(artifact.title)}</strong>
+                      <span class="status-badge">${escapeHtml(artifact.type)}</span>
+                    </header>
+                    ${artifact.lines.map((line) => `<p>${escapeHtml(line)}</p>`).join('')}
+                  </div>
+                `,
+              )
+              .join('')}
+          </div>
+        ` : ''}
+        ${conversation.followUps?.length ? `
+          <div class="chip-row" style="margin-top:16px;">
+            ${conversation.followUps.map((item) => `<button class="chip" ${interactiveAttrs(item)}>${escapeHtml(item)}</button>`).join('')}
+          </div>
+        ` : ''}
+        <div class="conversation-composer">
+          <div class="composer-input">输入消息...（Shift+Enter 换行，输入 @ 可引用历史记录）</div>
+          <button class="primary-btn" data-action="noop">发送</button>
+        </div>
+      </section>
+    `;
+  }
+
   return `
     <section class="card">
       <h2>默认对话流</h2>
@@ -322,6 +522,7 @@ function renderAnalysis(page) {
         ${page.conclusion.tags.map((tag, idx) => `<span class="tag ${idx === 0 ? 'strong' : ''}">${escapeHtml(tag)}</span>`).join('')}
       </div>
     </section>
+    ${renderConversation(page.conversation)}
     <section class="insight-grid">
       ${page.insightCards.map((item) => `
         <div class="insight-card">
@@ -371,6 +572,7 @@ function renderRisk(page) {
       </div>
     </section>
     ${renderSummaryCards(page.summaryCards)}
+    ${renderConversation(page.conversation)}
     <section class="split-grid">
       <div class="card">
         <h2>Risk List</h2>
@@ -408,6 +610,7 @@ function renderTasks(page) {
   return `
     ${renderPageHeader(page)}
     ${renderSummaryCards(page.summaryCards)}
+    ${renderConversation(page.conversation)}
     <section class="card">
       <h2>Task Filter Bar</h2>
       <div class="filter-bar">
@@ -439,7 +642,7 @@ function renderTasks(page) {
           </header>
           ${page.detail.lines.map((line) => `<p style="margin-bottom:10px;">${escapeHtml(line)}</p>`).join('')}
           <div class="action-row" style="margin-top:14px;">
-            ${page.detail.actions.map((action, index) => `<button class="${index === 0 ? 'primary-btn' : 'secondary-btn'}" data-action="noop">${escapeHtml(action)}</button>`).join('')}
+            ${page.detail.actions.map((action, index) => `<button class="${index === 0 ? 'primary-btn' : 'secondary-btn'}" ${interactiveAttrs(action)}>${escapeHtml(action)}</button>`).join('')}
           </div>
         </div>
       </div>
@@ -450,6 +653,7 @@ function renderTasks(page) {
 function renderReports(page) {
   return `
     ${renderPageHeader(page)}
+    ${renderConversation(page.conversation)}
     <section class="card">
       <h2>Report Filter Bar</h2>
       <div class="filter-bar">
@@ -477,7 +681,7 @@ function renderReports(page) {
         </header>
         ${page.detail.lines.map((line) => `<p style="margin-bottom:10px;">${escapeHtml(line)}</p>`).join('')}
         <div class="action-row" style="margin-top:14px;">
-          ${page.detail.actions.map((action, index) => `<button class="${index === 0 ? 'primary-btn' : 'secondary-btn'}" data-action="noop">${escapeHtml(action)}</button>`).join('')}
+          ${page.detail.actions.map((action, index) => `<button class="${index === 0 ? 'primary-btn' : 'secondary-btn'}" ${interactiveAttrs(action)}>${escapeHtml(action)}</button>`).join('')}
         </div>
       </div>
     </section>
@@ -487,7 +691,7 @@ function renderReports(page) {
         ${page.subscriptions.map((item) => `<div class="list-card"><p>${escapeHtml(item)}</p></div>`).join('')}
       </div>
       <div class="action-row" style="margin-top:14px;">
-        <button class="primary-btn" data-action="noop">${escapeHtml(page.subscriptionAction)}</button>
+        <button class="primary-btn" ${interactiveAttrs(page.subscriptionAction)}>${escapeHtml(page.subscriptionAction)}</button>
       </div>
     </section>
   `;
@@ -498,12 +702,17 @@ function renderHome(page) {
     ${renderPageHeader(page)}
     ${renderSummaryCards(page.summaryCards)}
     ${renderHero(page.hero)}
-    ${renderPrompts('Recommended Questions', page.prompts)}
     ${renderConversation(page.conversation)}
+    ${renderPrompts('Recommended Questions', page.prompts)}
   `;
 }
 
 function renderMain() {
+  const conversation = activeConversation();
+  if (conversation) {
+    return `<main class="main-pane conversation-only">${renderConversation(conversation)}</main>`;
+  }
+
   const page = pages[state.page];
   const body = (() => {
     switch (state.page) {
@@ -581,11 +790,23 @@ function renderApp() {
     </div>
   `;
 
-  app.querySelectorAll('[data-page]').forEach((node) => {
+  app.querySelectorAll('[data-page]:not([data-conversation])').forEach((node) => {
     node.addEventListener('click', () => {
       const next = node.getAttribute('data-page');
       state.page = next;
       state.panelTab = pages[next].defaultPanel;
+      state.activeConversationId = null;
+      renderApp();
+    });
+  });
+
+  app.querySelectorAll('[data-conversation]').forEach((node) => {
+    node.addEventListener('click', () => {
+      const next = node.getAttribute('data-page');
+      const conversationId = node.getAttribute('data-conversation');
+      state.page = next;
+      state.panelTab = pages[next].defaultPanel;
+      state.activeConversationId = conversationId;
       renderApp();
     });
   });
