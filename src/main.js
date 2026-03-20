@@ -1,4 +1,4 @@
-import { appMeta, navigation, pages, quickPrompts, recentChats, conversations, conversationPanels, sharedPanels } from './data.js';
+import { appMeta, navigation, pages, recentChats, conversations, conversationPanels, sharedPanels } from './data.js';
 
 const state = {
   page: 'home',
@@ -47,6 +47,13 @@ function actionTarget(label) {
     '查看回看': 'tasks',
     '生成周报素材': 'reports',
     '标记处理中': 'tasks',
+    '查看规则详情': 'push',
+    '查看图表': 'reports',
+    '下载报告': 'reports',
+    '看风险门店': 'risk',
+    '看任务进度': 'tasks',
+    '看利润缺口': 'analysis',
+    '看定时推送': 'push',
   };
   return map[label] || null;
 }
@@ -68,65 +75,337 @@ function panelItemsForCurrentPage() {
 
   const byPage = {
     home: {
-      alerts: sharedPanels.alerts,
       tasks: [
-        { title: '待处理整改任务', meta: '今日 5 条 · 优先处理新店差评', status: '待处理' },
-        { title: '补货确认任务', meta: '2 家门店 · 今日 11:30 前反馈', status: '即将超时' },
+        {
+          title: '春菜上架任务',
+          status: '处理中',
+          chain: '总部运营 → 区域负责人 → 华东督导组',
+          due: '2026-03-22 18:00',
+          progress: '68%（8/12 店）',
+          meta: '卡点：苏州 2 店未完成试菜回执',
+          actions: ['查看全部任务'],
+        },
+        {
+          title: '食安巡检任务',
+          status: '超时风险',
+          chain: '区域负责人 → 南京督导 → 5 家门店',
+          due: '2026-03-20 20:00',
+          progress: '60%（3/5 店）',
+          meta: '高风险项：后厨留样记录不完整',
+          actions: ['查看异常门店'],
+        },
+      ],
+      alerts: [
+        {
+          title: '[高] 苏州片区差评率异常',
+          status: '待处理',
+          source: 'Toast AI主动发现',
+          trigger: '今天 10:20',
+          impact: '差评率 +1.8pct；影响 5 家门店',
+          suggestion: '优先排查晚高峰出餐与打包 SOP',
+          actions: ['查看异常门店'],
+        },
+        {
+          title: '[中] 经营利润下滑提醒',
+          status: '待处理',
+          source: '下级提报',
+          trigger: '今天 09:40',
+          impact: '南京南区利润率 -1.3pct；外卖毛利承压',
+          suggestion: '暂停低毛利活动并复核补贴规则',
+          actions: ['看利润缺口'],
+        },
       ],
       reports: [
-        { title: '今日经营简报', subtitle: '首页摘要对应日报', action: '查看报告' },
+        {
+          title: '📈 周营收分析',
+          source: '用户创建',
+          snapshotId: '#RPT-20260316-003',
+          generatedAt: '2026-03-16 09:00',
+          summary: '本周营收同比增长 8.5%，外卖占比提升。',
+          metrics: [
+            { label: '周营收', value: '¥128,450' },
+            { label: '同比', value: '+8.5%' },
+            { label: '外卖占比', value: '42%' },
+          ],
+          verified: '已验证',
+          evidence: [
+            '综合好评率 96.2%，环比 +1.1pct',
+            '抖音渠道贡献 12%，环比 +0.7pct',
+            '差评集中门店：苏州园区店、南京中山店（QSC: 出餐/打包）',
+          ],
+          actions: ['查看图表', '下载报告'],
+        },
       ],
     },
     analysis: {
-      alerts: [
-        { title: '分析结论相关提醒', subtitle: '南京/苏州门店仍处高风险区', action: '查看异常门店' },
-      ],
       tasks: [
-        { title: '生成整改任务候选', meta: '由当前分析生成', status: '待处理' },
+        {
+          title: '低毛利活动优化任务',
+          status: '待处理',
+          chain: '区域负责人 → 督导组长 → 重点门店',
+          due: '2026-03-21 16:00',
+          progress: '25%（2/8 店）',
+          meta: '目标：恢复利润率 +0.9pct',
+          actions: ['生成整改任务'],
+        },
+      ],
+      alerts: [
+        {
+          title: '[高] 生鲜品类目标缺口持续扩大',
+          status: '待处理',
+          source: 'Toast AI主动发现',
+          trigger: '今天 11:02',
+          impact: '生鲜达成率 84%，缺口 ¥21,000',
+          suggestion: '优先复制杭州样板店活动结构',
+          actions: ['看利润缺口'],
+        },
       ],
       reports: [
-        { title: '今日分析简报', subtitle: '草稿 · 与当前分析绑定', action: '查看报告' },
-        { title: '本周经营复盘', subtitle: '可并入当前结论', action: '查看报告' },
-        { title: '保存当前分析为报告', subtitle: '下次推送 08:00', action: '保存为报告' },
+        {
+          title: '📈 目标达成与缺口分析',
+          source: 'Toast AI生成',
+          snapshotId: '#RPT-20260320-ANL',
+          generatedAt: '2026-03-20 14:10',
+          summary: '外卖和生鲜是主要缺口来源，南京/苏州需优先修复。',
+          metrics: [
+            { label: '总体达成', value: '91%' },
+            { label: '目标缺口', value: '¥82,000' },
+            { label: '活动贡献', value: '22.3%' },
+          ],
+          verified: '已验证',
+          evidence: [
+            '区域排名：杭州 > 上海 > 南京 > 苏州',
+            '督导排名：赵琳 108%，周凡 89%',
+            '低毛利活动导致利润稀释 1.1pct',
+          ],
+          actions: ['查看图表', '下载报告'],
+        },
       ],
     },
     risk: {
-      alerts: [
-        { title: '高风险门店提醒', subtitle: '苏州园区店 / 南京鸡尾店 / 杭州西溪店', action: '查看异常门店' },
-      ],
       tasks: [
-        { title: '待创建任务', meta: '3 条风险待转任务', status: '待处理' },
-        { title: '今日已下发', meta: '5 条巡检/整改任务', status: '处理中' },
-        { title: '即将超时', meta: '2 条任务需追踪', status: '即将超时' },
+        {
+          title: '高风险门店整改任务包',
+          status: '处理中',
+          chain: '区域负责人 → 苏州督导 → 园区店/高新区店',
+          due: '2026-03-21 18:00',
+          progress: '50%（2/4 项）',
+          meta: '已完成补货，待完成晚高峰排班复核',
+          actions: ['查看全部任务'],
+        },
+      ],
+      alerts: [
+        {
+          title: '[高] 苏州园区店复合风险',
+          status: '待处理',
+          source: 'Toast AI主动发现',
+          trigger: '今天 14:32',
+          impact: '差评率 8.7% + 牛腩库存 12.5kg',
+          suggestion: '补货与督导巡检并行推进',
+          actions: ['查看异常门店'],
+        },
+        {
+          title: '[中] 南京鸡尾店食安预警',
+          status: '待处理',
+          source: '下级提报',
+          trigger: '今天 13:15',
+          impact: '食安相关差评连续 2 天上升',
+          suggestion: '抽检后厨留样与清洁记录',
+          actions: ['查看异常门店'],
+        },
       ],
       reports: [
-        { title: '门店风险周报', subtitle: '可从风险列表生成专题', action: '查看报告' },
+        {
+          title: '📈 风险门店周报',
+          source: 'Toast AI生成',
+          snapshotId: '#RPT-20260320-RSK',
+          generatedAt: '2026-03-20 15:00',
+          summary: '高风险门店 3 家，QSC 共性问题集中在出餐与打包。',
+          metrics: [
+            { label: '高风险门店', value: '3 家' },
+            { label: '差评率环比', value: '+1.4pct' },
+            { label: '已闭环', value: '8 条' },
+          ],
+          verified: '待复核',
+          evidence: [
+            '平台分布：美团 63%，点评 22%，抖音 15%',
+            'QSC 聚类：出餐慢、打包漏液、食安留样缺失',
+            '共性门店：苏州园区店、南京鸡尾店',
+          ],
+          actions: ['查看图表', '下载报告'],
+        },
       ],
     },
     tasks: {
-      alerts: [
-        { title: '任务超时提醒', subtitle: '3 条任务距离截止 <= 24h', action: '查看全部任务' },
-      ],
       tasks: [
-        { title: '我负责的任务', meta: '6 条', status: '处理中' },
-        { title: '今日新建', meta: '4 条', status: '待处理' },
-        { title: '即将超时', meta: '3 条', status: '即将超时' },
+        {
+          title: '春菜上架派发任务',
+          status: '处理中',
+          chain: '总部运营 → 区域负责人 → 12 家门店',
+          due: '2026-03-20 18:00',
+          progress: '68%（8/12 店）',
+          meta: '督导反馈：2 家门店需追加培训',
+          actions: ['查看全部任务'],
+        },
+        {
+          title: '食安巡检专项',
+          status: '待处理',
+          chain: '区域负责人 → 督导组 → 风险门店',
+          due: '2026-03-21 12:00',
+          progress: '40%（4/10 店）',
+          meta: '重点检查后厨留样与温控记录',
+          actions: ['查看全部任务'],
+        },
+      ],
+      alerts: [
+        {
+          title: '[高] 任务超时风险',
+          status: '待处理',
+          source: 'Toast AI主动发现',
+          trigger: '今天 12:20',
+          impact: '3 条任务将在 24h 内到期',
+          suggestion: '优先推进苏州片区巡检任务',
+          actions: ['查看全部任务'],
+        },
       ],
       reports: [
-        { title: '任务周报素材', subtitle: '可从当前任务生成', action: '查看报告' },
+        {
+          title: '📈 任务闭环复盘',
+          source: '用户创建',
+          snapshotId: '#RPT-20260320-TSK',
+          generatedAt: '2026-03-20 13:50',
+          summary: '当前任务完成率 68%，超时风险主要集中在苏州片区。',
+          metrics: [
+            { label: '任务完成率', value: '68%' },
+            { label: '超时风险', value: '3 条' },
+            { label: '回看达标', value: '5 条' },
+          ],
+          verified: '已验证',
+          evidence: [
+            '总部派发任务按时完成率 81%',
+            '督导执行差异：南京 > 杭州 > 苏州',
+            '未达标原因：巡检回执上传延迟',
+          ],
+          actions: ['查看图表', '下载报告'],
+        },
       ],
     },
     reports: {
       alerts: [
-        { title: '待发送报告提醒', subtitle: '今日仍有 1 份待发送', action: '查看报告' },
+        {
+          title: '[中] 待发送报告提醒',
+          status: '待处理',
+          source: 'Toast AI主动发现',
+          trigger: '今天 08:45',
+          impact: '华东经营复盘仍未推送',
+          suggestion: '先发老板日报，再发区域周报',
+          actions: ['查看报告'],
+        },
       ],
       tasks: [
-        { title: '报告跟进任务', meta: '2 条报告需补充负责人确认', status: '待确认' },
+        {
+          title: '报告补充确认任务',
+          status: '待处理',
+          chain: '区域负责人 → 数据专员',
+          due: '2026-03-20 17:00',
+          progress: '50%（1/2 报告）',
+          meta: '需补录督导区域平台拆分图',
+          actions: ['查看报告'],
+        },
       ],
       reports: [
-        { title: '最新报告', subtitle: '2 份已生成', action: '查看报告' },
-        { title: '已订阅模板', subtitle: '标准周报', action: '新建订阅' },
-        { title: '下次推送', subtitle: '08:00', action: '查看报告' },
+        {
+          title: '📈 周营收分析',
+          source: '用户创建',
+          snapshotId: '#RPT-20260316-003',
+          generatedAt: '2026-03-16 09:00',
+          summary: '本周营收同比增长 8.5%，外卖占比提升。',
+          metrics: [
+            { label: '周营收', value: '¥128,450' },
+            { label: '同比', value: '+8.5%' },
+            { label: '外卖占比', value: '42%' },
+          ],
+          verified: '已验证',
+          evidence: [
+            '综合好评率 96.2%，环比 +1.1pct',
+            '督导区域平台分布：赵琳片区外卖占比 46%',
+            '差评门店 QSC：出餐慢、打包漏液',
+          ],
+          actions: ['查看图表', '下载报告'],
+        },
+        {
+          title: '📈 好差评率及分析报告',
+          source: 'Toast AI生成',
+          snapshotId: '#RPT-20260320-007',
+          generatedAt: '2026-03-20 09:20',
+          summary: '综合好评率提升，但苏州片区差评仍偏高。',
+          metrics: [
+            { label: '综合好评率', value: '96.2%' },
+            { label: '环比', value: '+1.1pct' },
+            { label: '差评门店', value: '3 家' },
+          ],
+          verified: '已验证',
+          evidence: [
+            '平台分布：美团好评率 95.8%，点评 96.9%',
+            '苏州片区差评率 8.7%，环比 +1.4pct',
+            'QSC 主要问题：出餐速度、食安记录、打包规范',
+          ],
+          actions: ['查看图表', '下载报告'],
+        },
+      ],
+    },
+    push: {
+      tasks: [
+        {
+          title: '定时推送维护任务',
+          status: '处理中',
+          chain: '区域负责人 → 数据运营',
+          due: '2026-03-21 10:00',
+          progress: '67%（4/6 规则）',
+          meta: '需要复核老板日报推送窗口',
+          actions: ['看定时推送'],
+        },
+      ],
+      alerts: [
+        {
+          title: '[高] 区域利润率下滑推送命中',
+          status: '待处理',
+          source: 'Toast AI主动发现',
+          trigger: '今天 10:50',
+          impact: '苏州南区利润率 -1.6pct',
+          suggestion: '立即触发区域经理提醒并附整改建议',
+          actions: ['查看规则详情'],
+        },
+        {
+          title: '[中] 下级提报：差评率上升',
+          status: '待处理',
+          source: '下级提报',
+          trigger: '今天 09:30',
+          impact: '南京北区差评率 +1.2pct',
+          suggestion: '并入 12:00 汇总推送',
+          actions: ['查看规则详情'],
+        },
+      ],
+      reports: [
+        {
+          title: '📈 推送规则命中周报',
+          source: 'Toast AI生成',
+          snapshotId: '#RPT-20260320-PSH',
+          generatedAt: '2026-03-20 11:20',
+          summary: '规则命中 9 次，高优风险 3 次，均已触达负责人。',
+          metrics: [
+            { label: '命中次数', value: '9 次' },
+            { label: '高优风险', value: '3 次' },
+            { label: '触达率', value: '100%' },
+          ],
+          verified: '已验证',
+          evidence: [
+            'L1 风险实时推送平均延迟 2 分钟',
+            'L2 经营提醒按 2 小时汇总已生效',
+            '下级提报占提醒来源 34%',
+          ],
+          actions: ['查看图表', '下载报告'],
+        },
       ],
     },
   };
@@ -175,13 +454,6 @@ function renderLeftNav() {
   return `
     <aside class="left-nav">
       <div>
-        <div class="nav-group-title">模式切换</div>
-        <div class="mode-switch">
-          <button class="active" data-action="noop">AI 工作台</button>
-          <button data-action="noop">传统模式</button>
-        </div>
-      </div>
-      <div>
         <div class="nav-group-title">主导航</div>
         <div class="nav-list">
           ${navigation
@@ -197,7 +469,7 @@ function renderLeftNav() {
         </div>
       </div>
       <div>
-        <div class="nav-group-title">最近会话</div>
+        <div class="nav-group-title">主题会话</div>
         <div class="simple-list">
           ${recentChats
             .map(
@@ -214,16 +486,6 @@ function renderLeftNav() {
             .join('')}
         </div>
       </div>
-      <div>
-        <div class="nav-group-title">快捷提问</div>
-        <div class="prompt-list">
-          ${quickPrompts
-            .map(
-              (item) => `<button class="link-btn" data-page="${item.target}">${escapeHtml(item.label)}</button>`,
-            )
-            .join('')}
-        </div>
-      </div>
     </aside>
   `;
 }
@@ -235,19 +497,54 @@ function navMeta(page) {
     case 'risk': return '门店风险识别与处理';
     case 'tasks': return '执行闭环与回看';
     case 'reports': return '日报、周报与专题';
+    case 'push': return '定时与规则推送编排';
     default: return '';
   }
 }
 
-function renderPageHeader(page) {
+function renderRoleFocus(pageId, page) {
+  const focus = page.focus;
+  if (!focus) {
+    return '';
+  }
+
+  if (pageId === 'analysis') {
+    return `
+      <section class="card focus-card">
+        <div class="focus-head">
+          <h2>${escapeHtml(focus.title)}</h2>
+          <span class="status-badge ok">区域运营视角</span>
+        </div>
+        <div class="focus-query"><strong>Query：</strong>${escapeHtml(focus.query)}</div>
+        <div class="focus-conclusion"><strong>结论：</strong>${escapeHtml(focus.conclusion)}</div>
+        <div class="focus-grid">
+          ${focus.blocks
+            .map(
+              (block) => `
+                <div class="focus-block">
+                  <strong>${escapeHtml(block.title)}</strong>
+                  <ul>${block.lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
+                </div>
+              `,
+            )
+            .join('')}
+        </div>
+      </section>
+    `;
+  }
+
   return `
-    <section class="page-header">
-      <div class="page-eyebrow">
-        <span>PC 端工作台 Demo</span>
-        <button class="topbar-chip" data-action="noop">${escapeHtml(appMeta.date)}</button>
+    <section class="card focus-card">
+      <div class="focus-head">
+        <h2>${escapeHtml(focus.title)}</h2>
+        <span class="status-badge">角色关注摘要</span>
       </div>
-      <h1>${escapeHtml(page.title)}</h1>
-      <p>${escapeHtml(page.subtitle)}</p>
+      <ul>${focus.items.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul>
+      ${focus.chips?.length ? `
+        <div class="chip-row">
+          ${focus.chips.map((chip) => `<button class="chip" ${interactiveAttrs(chip)}>${escapeHtml(chip)}</button>`).join('')}
+        </div>
+      ` : ''}
     </section>
   `;
 }
@@ -505,46 +802,8 @@ function renderConversation(conversation) {
 
 function renderAnalysis(page) {
   return `
-    ${renderPageHeader(page)}
-    <section class="card">
-      <h2>Query Bar</h2>
-      <div class="list-card">
-        <p>${escapeHtml(page.query)}</p>
-        <div class="query-actions" style="margin-top:16px;">
-          ${page.queryActions.map((item, idx) => `<button class="${idx === 1 ? 'secondary-btn' : 'primary-btn'}" ${interactiveAttrs(item)}>${escapeHtml(item)}</button>`).join('')}
-        </div>
-      </div>
-    </section>
-    <section class="card">
-      <h2>${escapeHtml(page.conclusion.title)}</h2>
-      <ul>${page.conclusion.lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>
-      <div class="tag-row">
-        ${page.conclusion.tags.map((tag, idx) => `<span class="tag ${idx === 0 ? 'strong' : ''}">${escapeHtml(tag)}</span>`).join('')}
-      </div>
-    </section>
+    ${renderRoleFocus('analysis', page)}
     ${renderConversation(page.conversation)}
-    <section class="insight-grid">
-      ${page.insightCards.map((item) => `
-        <div class="insight-card">
-          <strong>${escapeHtml(item.title)}</strong>
-          <div style="font-size:22px;font-weight:700;margin-bottom:8px;">${escapeHtml(item.value)}</div>
-          <p>${escapeHtml(item.desc)}</p>
-        </div>
-      `).join('')}
-    </section>
-    <section class="visual-grid">
-      ${page.visuals.map((item) => `
-        <div class="visual-card">
-          <div>
-            <h3>${escapeHtml(item.title)}</h3>
-            <p>${escapeHtml(item.desc)}</p>
-          </div>
-          <div class="chart-placeholder">静态图表占位</div>
-        </div>
-      `).join('')}
-    </section>
-    ${renderTable(page.table)}
-    ${renderPrompts('Follow-up Questions', page.prompts, 'chip')}
   `;
 }
 
@@ -564,146 +823,36 @@ function renderTable(table) {
 
 function renderRisk(page) {
   return `
-    ${renderPageHeader(page)}
-    <section class="card">
-      <h2>Filter Bar</h2>
-      <div class="filter-bar">
-        ${page.filters.map((item) => `<button class="filter-pill" data-action="noop">${escapeHtml(item)}</button>`).join('')}
-      </div>
-    </section>
-    ${renderSummaryCards(page.summaryCards)}
+    ${renderRoleFocus('risk', page)}
     ${renderConversation(page.conversation)}
-    <section class="split-grid">
-      <div class="card">
-        <h2>Risk List</h2>
-        <div class="list-stack">
-          ${page.list.map((item) => `
-            <div class="list-card">
-              <header>
-                <strong>${escapeHtml(item.title)}</strong>
-                <span class="status-badge ${item.level === '高' ? 'danger' : 'warn'}">${escapeHtml(item.level)}</span>
-              </header>
-              <p><strong>问题：</strong>${escapeHtml(item.problem)}</p>
-              <p><strong>建议：</strong>${escapeHtml(item.action)}</p>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-      <div class="card">
-        <h2>Risk Detail Drawer</h2>
-        <div class="detail-card">
-          <header>
-            <strong>${escapeHtml(page.detail.title)}</strong>
-            <span class="status-badge danger">选中门店</span>
-          </header>
-          ${page.detail.lines.map((line) => `<p style="margin-bottom:10px;">${escapeHtml(line)}</p>`).join('')}
-          <div class="action-row" style="margin-top:14px;">
-            ${page.detail.actions.map((action) => `<button class="primary-btn" data-page="${action.includes('任务') ? 'tasks' : 'risk'}">${escapeHtml(action)}</button>`).join('')}
-          </div>
-        </div>
-      </div>
-    </section>
   `;
 }
 
 function renderTasks(page) {
   return `
-    ${renderPageHeader(page)}
-    ${renderSummaryCards(page.summaryCards)}
+    ${renderRoleFocus('tasks', page)}
     ${renderConversation(page.conversation)}
-    <section class="card">
-      <h2>Task Filter Bar</h2>
-      <div class="filter-bar">
-        ${page.filters.map((item) => `<button class="filter-pill" data-action="noop">${escapeHtml(item)}</button>`).join('')}
-      </div>
-    </section>
-    <section class="split-grid">
-      <div class="card">
-        <h2>Task List</h2>
-        <div class="list-stack">
-          ${page.list.map((item) => `
-            <div class="list-card">
-              <header>
-                <strong>${escapeHtml(item.title)}</strong>
-                <span class="status-badge ${item.status === '待处理' ? 'warn' : 'ok'}">${escapeHtml(item.status)}</span>
-              </header>
-              <p><strong>来源：</strong>${escapeHtml(item.source)}</p>
-              <p><strong>截止：</strong>${escapeHtml(item.due)}</p>
-            </div>
-          `).join('')}
-        </div>
-      </div>
-      <div class="card">
-        <h2>Task Detail Panel</h2>
-        <div class="detail-card">
-          <header>
-            <strong>${escapeHtml(page.detail.title)}</strong>
-            <span class="status-badge warn">执行中</span>
-          </header>
-          ${page.detail.lines.map((line) => `<p style="margin-bottom:10px;">${escapeHtml(line)}</p>`).join('')}
-          <div class="action-row" style="margin-top:14px;">
-            ${page.detail.actions.map((action, index) => `<button class="${index === 0 ? 'primary-btn' : 'secondary-btn'}" ${interactiveAttrs(action)}>${escapeHtml(action)}</button>`).join('')}
-          </div>
-        </div>
-      </div>
-    </section>
   `;
 }
 
 function renderReports(page) {
   return `
-    ${renderPageHeader(page)}
+    ${renderRoleFocus('reports', page)}
     ${renderConversation(page.conversation)}
-    <section class="card">
-      <h2>Report Filter Bar</h2>
-      <div class="filter-bar">
-        ${page.filters.map((item) => `<button class="filter-pill" data-action="noop">${escapeHtml(item)}</button>`).join('')}
-      </div>
-    </section>
-    <section class="report-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">
-      ${page.cards.map((card) => `
-        <div class="report-card">
-          <header>
-            <strong>${escapeHtml(card.title)}</strong>
-            <span class="status-badge ${card.tags[1] === '已订阅' ? 'ok' : ''}">${escapeHtml(card.tags[1])}</span>
-          </header>
-          <p>${card.tags.join(' · ')}</p>
-          <p style="margin-top:6px;">Updated: ${escapeHtml(card.updated)}</p>
-        </div>
-      `).join('')}
-    </section>
-    <section class="card">
-      <h2>Selected Report Detail</h2>
-      <div class="detail-card">
-        <header>
-          <strong>${escapeHtml(page.detail.title)}</strong>
-          <span class="status-badge ok">已选择</span>
-        </header>
-        ${page.detail.lines.map((line) => `<p style="margin-bottom:10px;">${escapeHtml(line)}</p>`).join('')}
-        <div class="action-row" style="margin-top:14px;">
-          ${page.detail.actions.map((action, index) => `<button class="${index === 0 ? 'primary-btn' : 'secondary-btn'}" ${interactiveAttrs(action)}>${escapeHtml(action)}</button>`).join('')}
-        </div>
-      </div>
-    </section>
-    <section class="card">
-      <h2>Subscription Section</h2>
-      <div class="list-stack">
-        ${page.subscriptions.map((item) => `<div class="list-card"><p>${escapeHtml(item)}</p></div>`).join('')}
-      </div>
-      <div class="action-row" style="margin-top:14px;">
-        <button class="primary-btn" ${interactiveAttrs(page.subscriptionAction)}>${escapeHtml(page.subscriptionAction)}</button>
-      </div>
-    </section>
+  `;
+}
+
+function renderPush(page) {
+  return `
+    ${renderRoleFocus('push', page)}
+    ${renderConversation(page.conversation)}
   `;
 }
 
 function renderHome(page) {
   return `
-    ${renderPageHeader(page)}
-    ${renderSummaryCards(page.summaryCards)}
-    ${renderHero(page.hero)}
+    ${renderRoleFocus('home', page)}
     ${renderConversation(page.conversation)}
-    ${renderPrompts('Recommended Questions', page.prompts)}
   `;
 }
 
@@ -721,6 +870,7 @@ function renderMain() {
       case 'risk': return renderRisk(page);
       case 'tasks': return renderTasks(page);
       case 'reports': return renderReports(page);
+      case 'push': return renderPush(page);
       default: return renderHome(pages.home);
     }
   })();
@@ -737,21 +887,88 @@ function panelLabel(key) {
   }
 }
 
+function statusTone(status = '') {
+  if (status.includes('高') || status.includes('超时') || status.includes('待处理')) return 'danger';
+  if (status.includes('中') || status.includes('待确认')) return 'warn';
+  if (status.includes('已') || status.includes('处理') || status.includes('完成')) return 'ok';
+  return '';
+}
+
+function renderPanelActions(item) {
+  const actions = item.actions || (item.action ? [item.action] : []);
+  if (!actions.length) return '';
+  return `
+    <div class="action-row panel-action-row">
+      ${actions.map((action) => `<button class="secondary-btn" ${interactiveAttrs(action)}>${escapeHtml(action)}</button>`).join('')}
+    </div>
+  `;
+}
+
 function renderPanelContent() {
   const key = state.panelTab;
   const items = panelItemsForCurrentPage();
-  return items
-    .map(
-      (item) => `
-      <div class="panel-card">
-        <strong>${escapeHtml(item.title)}</strong>
-        <p>${escapeHtml(item.subtitle || item.meta || '')}</p>
-        ${item.status ? `<div class="tag-row"><span class="status-badge ${item.status === '即将超时' ? 'danger' : item.status === '处理中' ? 'ok' : 'warn'}">${escapeHtml(item.status)}</span></div>` : ''}
-        ${item.action ? `<div class="action-row" style="margin-top:12px;"><button class="secondary-btn" ${interactiveAttrs(item.action)}>${escapeHtml(item.action)}</button></div>` : ''}
+  return items.map((item) => {
+    if (key === 'reports') {
+      return `
+        <div class="panel-card report-panel-card">
+          <div class="panel-card-head">
+            <strong>${escapeHtml(item.title)}</strong>
+            ${item.verified ? `<span class="status-badge ${statusTone(item.verified)}">${escapeHtml(item.verified)}</span>` : ''}
+          </div>
+          ${item.source ? `<p><strong>来源：</strong>${escapeHtml(item.source)}</p>` : ''}
+          ${item.snapshotId ? `<p><strong>快照ID：</strong>${escapeHtml(item.snapshotId)}</p>` : ''}
+          ${item.generatedAt ? `<p><strong>生成时间：</strong>${escapeHtml(item.generatedAt)}</p>` : ''}
+          ${item.summary || item.subtitle ? `<p>${escapeHtml(item.summary || item.subtitle)}</p>` : ''}
+          ${item.metrics?.length ? `
+            <div class="panel-kpis">
+              ${item.metrics.map((metric) => `
+                <div class="panel-kpi">
+                  <span>${escapeHtml(metric.label)}</span>
+                  <strong>${escapeHtml(metric.value)}</strong>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+          ${item.evidence?.length ? `
+            <div class="panel-evidence">
+              ${item.evidence.map((line) => `<p>• ${escapeHtml(line)}</p>`).join('')}
+            </div>
+          ` : ''}
+          ${renderPanelActions(item)}
+        </div>
+      `;
+    }
+
+    if (key === 'tasks') {
+      return `
+        <div class="panel-card task-panel-card">
+          <div class="panel-card-head">
+            <strong>${escapeHtml(item.title)}</strong>
+            ${item.status ? `<span class="status-badge ${statusTone(item.status)}">${escapeHtml(item.status)}</span>` : ''}
+          </div>
+          ${item.chain ? `<p><strong>责任链路：</strong>${escapeHtml(item.chain)}</p>` : ''}
+          ${item.due ? `<p><strong>截止时间：</strong>${escapeHtml(item.due)}</p>` : ''}
+          ${item.progress ? `<p><strong>完成进度：</strong>${escapeHtml(item.progress)}</p>` : ''}
+          ${item.meta ? `<p>${escapeHtml(item.meta)}</p>` : ''}
+          ${renderPanelActions(item)}
+        </div>
+      `;
+    }
+
+    return `
+      <div class="panel-card alert-panel-card">
+        <div class="panel-card-head">
+          <strong>${escapeHtml(item.title)}</strong>
+          ${item.status ? `<span class="status-badge ${statusTone(item.status)}">${escapeHtml(item.status)}</span>` : ''}
+        </div>
+        ${item.source ? `<p><strong>来源：</strong>${escapeHtml(item.source)}</p>` : ''}
+        ${item.trigger ? `<p><strong>触发时间：</strong>${escapeHtml(item.trigger)}</p>` : ''}
+        ${item.impact || item.subtitle ? `<p><strong>异常：</strong>${escapeHtml(item.impact || item.subtitle)}</p>` : ''}
+        ${item.suggestion ? `<p><strong>建议动作：</strong>${escapeHtml(item.suggestion)}</p>` : ''}
+        ${renderPanelActions(item)}
       </div>
-    `,
-    )
-    .join('');
+    `;
+  }).join('');
 }
 
 function renderRightPanel() {
