@@ -131,7 +131,7 @@ export const pages = {
       messages: [
         {
           role: "ai",
-          label: "Toast AI",
+          label: "美团餐饮AI助手",
           badge: "系统主动提醒",
           time: "14:32",
           content: "触发规则 R-INV-009：牛腩库存低于安全阈值 18kg，按近 7 天中位消耗估算，明天 11:30 前可能断货。",
@@ -158,7 +158,7 @@ export const pages = {
         },
         {
           role: "ai",
-          label: "Toast AI",
+          label: "美团餐饮AI助手",
           time: "14:34",
           content: "午市利润下降的确定性原因有 3 个：包装成本率较上周上升 2.1pct，活动补贴支出增加 8.4%，南京和苏州两家主力门店配送补偿金额翻倍。牛腩断货风险会继续拉低晚市收入，我已经按 30kg 帮你生成待确认补货单。",
           highlights: ["包装成本率↑2.1pct", "活动补贴↑8.4%", "南京/苏州补偿异常"],
@@ -201,7 +201,7 @@ export const pages = {
         },
         {
           role: "ai",
-          label: "Toast AI",
+          label: "美团餐饮AI助手",
           time: "14:37",
           content: "会。牛腩本周从 ¥60.7 涨到 ¥68/kg，直接把水煮肉片毛利从 43% 压到 31%，已经破 35% 红线。建议优先比较供应商 B 报价，或者先把水煮肉片提价 ¥3 再观察 7 天销量。",
           highlights: ["水煮肉片 31%", "供应商 B 可恢复至 36%", "提价 ¥3 后预计净毛利 +¥620/天"],
@@ -312,7 +312,7 @@ export const pages = {
         },
         {
           role: "ai",
-          label: "Toast AI",
+          label: "美团餐饮AI助手",
           time: "14:06",
           content: "可以。南京中山店利润率 4.8%，包装成本占比 23%，活动补贴 ¥12.8k；苏州园区店客单价跌 6%，佣金和配送补偿上涨 ¥950。两个门店合计贡献了本次利润下滑的 57%。",
           highlights: ["南京中山店 4.8%", "苏州园区店客单价 -6%", "两店贡献 57%"],
@@ -343,26 +343,27 @@ export const pages = {
         },
         {
           role: "ai",
-          label: "Toast AI",
+          label: "美团餐饮AI助手",
           time: "14:08",
           content: "建议按优先级分 3 步：第一，南京/苏州门店立即暂停两档低毛利活动；第二，把外卖满减切到会员券承接，恢复毛利；第三，安排督导 16:00 抽查打包 SOP 和补偿规则。这样可以先止损，再看明天数据回弹。",
           highlights: ["暂停低毛利活动", "改用会员满减", "16:00 督导抽查"],
           cards: [
             {
-              type: "bars",
-              title: "动作优先级",
-              items: [
-                { label: "暂停低毛利活动", value: 92, valueLabel: "P1", meta: "最快止损" },
-                { label: "切换会员满减", value: 78, valueLabel: "P2", meta: "恢复毛利" },
-                { label: "督导抽查 SOP", value: 64, valueLabel: "P3", meta: "防止问题反复", tone: "warn" },
+              type: "summary",
+              title: "动作优先级（P1/P2/P3）",
+              badge: "执行顺序",
+              lines: [
+                "P1：南京/苏州门店先暂停两档低毛利活动，优先止损。",
+                "P2：外卖满减切到会员券承接，恢复毛利结构。",
+                "P3：督导16:00抽查打包SOP和补偿规则，防止问题反复。",
               ],
             },
           ],
-          actions: ["展开看南京门店", "只看外卖渠道", "生成运营整改任务"],
+          actions: ["查看报告", "生成任务"],
         },
         {
           role: "ai",
-          label: "Toast AI",
+          label: "美团餐饮AI助手",
           time: "14:09",
           content: "我已经把本次结论写成分析简报草稿，如果确认，可以直接保存为报告或生成门店整改任务。",
           cards: [
@@ -377,7 +378,7 @@ export const pages = {
               ],
             },
           ],
-          actions: ["保存为报告", "生成任务"],
+          actions: ["查看报告", "生成任务"],
         },
       ],
       artifacts: [
@@ -385,14 +386,16 @@ export const pages = {
           title: "分析证据摘要",
           type: "数据",
           lines: ["包装成本率较近 4 周均值高 2.1pct", "活动毛利下降 8.4%", "新店差评贡献 62%"],
+          actions: ["查看报告"],
         },
         {
           title: "建议动作包",
           type: "动作",
           lines: ["暂停低毛利活动", "复核配送补偿", "督导抽查打包流程"],
+          actions: ["生成任务"],
         },
       ],
-      followUps: ["展开看南京门店", "只看外卖渠道", "生成运营整改任务"],
+      followUps: ["查看报告", "生成任务"],
     },
   },
   risk: {
@@ -442,7 +445,7 @@ export const pages = {
         },
         {
           role: "ai",
-          label: "Toast AI",
+          label: "美团餐饮AI助手",
           time: "14:33",
           content: "苏州园区店目前最高。它同时命中差评异常和库存告警两类规则：差评率 8.7%，明显高于历史均值 4.2%；牛腩库存只有 12.5kg，低于安全阈值 18kg。",
           highlights: ["差评率 8.7%", "库存 12.5kg", "规则 R-INV-009"],
@@ -454,15 +457,17 @@ export const pages = {
               lines: ["苏州园区店属于复合型风险，不只是单一差评问题。", "如果不处理，晚市会同时受到断货和差评扩散影响。"],
             },
             {
-              type: "bars",
-              title: "风险权重拆解",
-              items: [
-                { label: "差评风险", value: 87, valueLabel: "8.7%", meta: "高于均值 4.2%", tone: "danger" },
-                { label: "库存风险", value: 69, valueLabel: "12.5kg", meta: "低于阈值 18kg", tone: "danger" },
-                { label: "出餐超时", value: 54, valueLabel: "+18%", meta: "晚高峰明显放大", tone: "warn" },
+              type: "summary",
+              title: "风险拆解（文本）",
+              badge: "证据排序",
+              lines: [
+                "差评风险：8.7%（高于均值 4.2%，高发问题是出餐超时和打包漏液）。",
+                "库存风险：牛腩 12.5kg（低于阈值 18kg，预计明天 11:30 前出现断货）。",
+                "时效风险：出餐超时 +18%（晚高峰放大，容易继续推高差评）。",
               ],
             },
           ],
+          actions: ["查看报告", "生成任务"],
         },
         {
           role: "user",
@@ -472,7 +477,7 @@ export const pages = {
         },
         {
           role: "ai",
-          label: "Toast AI",
+          label: "美团餐饮AI助手",
           time: "14:35",
           content: "先做补货和现场复盘并行。补货 30kg 可以先解除断货风险；同时今天 16:00 督导到店，重点看晚高峰排班、打包 SOP 和新人站位。这个组合动作对晚市影响最大。",
           highlights: ["补货 30kg", "16:00 督导到店", "优先晚高峰排班"],
@@ -486,10 +491,10 @@ export const pages = {
                 { label: "巡检", value: "16:00 督导到店" },
                 { label: "关注点", value: "排班 / 打包 / 新人站位" },
               ],
-              actions: ["生成任务", "加入巡检计划"],
+              actions: ["查看报告", "生成任务"],
             },
           ],
-          actions: ["生成任务", "加入巡检计划", "推送督导通知"],
+          actions: ["查看报告", "生成任务"],
         },
       ],
       artifacts: [
@@ -497,14 +502,16 @@ export const pages = {
           title: "高风险证据",
           type: "风险",
           lines: ["差评率 8.7% vs 均值 4.2%", "出餐超时 +18%", "牛腩库存少 5.5kg"],
+          actions: ["查看报告"],
         },
         {
           title: "推荐闭环动作",
           type: "任务",
           lines: ["立即补货 30kg", "督导现场复盘", "加入巡检计划并追踪"],
+          actions: ["生成任务"],
         },
       ],
-      followUps: ["生成任务", "加入巡检计划", "推送督导通知"],
+      followUps: ["查看报告", "生成任务"],
     },
   },
   tasks: {
@@ -556,7 +563,7 @@ export const pages = {
         },
         {
           role: "ai",
-          label: "Toast AI",
+          label: "美团餐饮AI助手",
           time: "13:41",
           content: "这条任务已经绑定完整闭环：责任人是南京区域经理，截止时间明日 18:00，需要上传整改照片和负责人签字。7 天后我会自动回看差评率是否回落 0.5pct。",
           highlights: ["责任人已绑定", "明日 18:00 截止", "7 天后自动回看"],
@@ -582,7 +589,7 @@ export const pages = {
         },
         {
           role: "ai",
-          label: "Toast AI",
+          label: "美团餐饮AI助手",
           time: "13:43",
           content: "可以直接转派给督导组长做现场指导，同时保留原责任人回执义务。回看时我会把差评内容、补货完成度、巡检记录和周报素材一起沉淀，避免只盯一个结果指标。",
           highlights: ["支持转派", "保留原责任人", "自动沉淀周报素材"],
@@ -658,7 +665,7 @@ export const pages = {
       messages: [
         {
           role: "ai",
-          label: "Toast AI",
+          label: "美团餐饮AI助手",
           badge: "定时简报",
           time: "09:00",
           content: "昨天经营简报已生成：营收环比 +1.8%，外卖利润率 -1.2pct，差评略回升。建议 08:00-09:00 区间推送给老板。",
@@ -684,7 +691,7 @@ export const pages = {
         },
         {
           role: "ai",
-          label: "Toast AI",
+          label: "美团餐饮AI助手",
           time: "09:04",
           content: "建议先发日报：老板关心的是营收和异常，所以先给全国经营简报。华东周报可以给区域运营团队预览，重点看本周营收 +5.2%、外卖占比 27%、3 家风险门店已安排巡检。",
           highlights: ["日报先推老板", "周报给区域运营", "风险门店已安排巡检"],
@@ -715,7 +722,7 @@ export const pages = {
         },
         {
           role: "ai",
-          label: "Toast AI",
+          label: "美团餐饮AI助手",
           time: "09:06",
           content: "可以。建议把新店口碑和春季上新专题都设为每周五 17:00 自动推送，这样老板在周会前能看到专题变化，不会被日报噪音打断。",
           highlights: ["专题改为每周五 17:00", "周会前推送", "减少日报噪音"],
@@ -785,7 +792,7 @@ export const pages = {
       messages: [
         {
           role: "ai",
-          label: "Toast AI",
+          label: "美团餐饮AI助手",
           badge: "主动建议",
           time: "11:10",
           content: "你当前启用了 12 条规则，其中 3 条在 08:00-09:00 高峰期集中触发，容易造成老板消息疲劳。建议做分层推送。",
@@ -807,7 +814,7 @@ export const pages = {
         },
         {
           role: "ai",
-          label: "Toast AI",
+          label: "美团餐饮AI助手",
           time: "11:13",
           content: "已生成编排方案：高优风险实时、经营提醒每 2 小时汇总、专题周五 17:00 固定推送。你确认后我可以同步到飞书与工作台。",
           cards: [
@@ -860,7 +867,7 @@ export const conversations = {
       },
       {
         role: "ai",
-        label: "Toast AI",
+        label: "美团餐饮AI助手",
         time: "16:11",
         content: "结论先说：截至今天，3月总体达成 50.23%，累计缺口约 ¥2.39M。线上完成快于线下，线下是当前主要短板。",
         highlights: ["总达成 50.23%", "累计缺口 ¥2.39M", "线下压力更大"],
@@ -885,7 +892,7 @@ export const conversations = {
       },
       {
         role: "ai",
-        label: "Toast AI",
+        label: "美团餐饮AI助手",
         time: "16:13",
         content: "当前掉队最明显的是苏州南区、南京北区和三督导片区，三者合计约占总缺口 41%。建议先下发 24 小时追赶任务。",
         cards: [
@@ -935,7 +942,7 @@ export const conversations = {
       },
       {
         role: "ai",
-        label: "Toast AI",
+        label: "美团餐饮AI助手",
         time: "15:33",
         content: "活动总体带来营收拉动，但出现“执行次数高、利润贡献低”的片区。建议保留头部样板区，收缩低效区并做 A/B 对照。",
         highlights: ["活动有增收", "两片区利润稀释", "建议A/B收缩"],
@@ -967,7 +974,7 @@ export const conversations = {
       },
       {
         role: "ai",
-        label: "Toast AI",
+        label: "美团餐饮AI助手",
         time: "15:36",
         content: "今天先做 3 件事：低效区暂停第二斤半价，切“满减+加价购”；高效区保留策略；48 小时回看利润率和执行效率。",
         cards: [
@@ -1007,7 +1014,7 @@ export const conversations = {
       },
       {
         role: "ai",
-        label: "Toast AI",
+        label: "美团餐饮AI助手",
         time: "15:06",
         content: "综合好评率较上月提升，但差评集中度在苏州和南京片区上升。拖累平台主要是点评和抖音在部分门店的异常波动。",
         highlights: ["综合好评率提升", "差评集中度上升", "点评/抖音拖累"],
@@ -1036,7 +1043,7 @@ export const conversations = {
       },
       {
         role: "ai",
-        label: "Toast AI",
+        label: "美团餐饮AI助手",
         time: "15:08",
         content: "已为高发门店生成整改包：24 小时差评回复 + 48 小时食安巡检，并绑定 7 天回看指标。",
         cards: [
@@ -1086,7 +1093,7 @@ export const conversations = {
       },
       {
         role: "ai",
-        label: "Toast AI",
+        label: "美团餐饮AI助手",
         time: "14:19",
         content: "结论：这家店可达月均 85,000，但必须同步拉升线下熟食客单与外卖单量。当前营业实收约 81,000，接近保本线 85,500。",
         highlights: ["目标月均 85,000", "当前实收约 81,000", "保本线 85,500"],
@@ -1115,7 +1122,7 @@ export const conversations = {
       },
       {
         role: "ai",
-        label: "Toast AI",
+        label: "美团餐饮AI助手",
         time: "14:21",
         content: "我已拆成三阶段执行：第1-2周线下引流，第3-6周外卖提量，第7-12周团购与复购优化。每周自动回看四个指标，连续两周未达标会触发调参提醒。",
         cards: [
@@ -1154,7 +1161,7 @@ export const conversations = {
       },
       {
         role: "ai",
-        label: "Toast AI",
+        label: "美团餐饮AI助手",
         time: "13:43",
         content: "当前总部任务整体完成度 68%。苏州片区掉队最明显，有 3 条任务在 24 小时内超时。",
         cards: [
@@ -1204,7 +1211,7 @@ export const conversations = {
       },
       {
         role: "ai",
-        label: "Toast AI",
+        label: "美团餐饮AI助手",
         time: "11:21",
         content: "已生成综合报告：本周营收同比 +8.5%，外卖占比 42%，综合好评率 91.96%，但苏州片区差评环比仍上升。",
         cards: [
@@ -1249,7 +1256,7 @@ export const conversations = {
       },
       {
         role: "ai",
-        label: "Toast AI",
+        label: "美团餐饮AI助手",
         time: "10:51",
         content: "今天共命中 9 次，L1 高优风险 3 条需要立即处理。提醒来源中，AI 主动发现占 66%，下级提报占 34%。",
         cards: [
@@ -1308,7 +1315,7 @@ export const conversationPanels = {
       {
         title: "[高] 目标缺口预警",
         status: "待处理",
-        source: "Toast AI主动发现",
+        source: "美团餐饮AI助手主动发现",
         trigger: "今天 16:11",
         impact: "累计缺口 ¥2.39M；线下达成仅 48.51%",
         suggestion: "优先推进苏州南区/南京北区追赶动作",
@@ -1318,7 +1325,7 @@ export const conversationPanels = {
     reports: [
       {
         title: "📈 3月目标追踪日报",
-        source: "Toast AI生成",
+        source: "美团餐饮AI助手生成",
         snapshotId: "#RPT-20260320-101",
         generatedAt: "2026-03-20 16:14",
         summary: "总体达成 50.23%，缺口集中在三片区。",
@@ -1349,7 +1356,7 @@ export const conversationPanels = {
       {
         title: "[中] 活动利润稀释风险",
         status: "待处理",
-        source: "Toast AI主动发现",
+        source: "美团餐饮AI助手主动发现",
         trigger: "今天 15:33",
         impact: "两片区执行次数高但利润贡献偏低",
         suggestion: "48小时回看利润率并决定是否收缩",
@@ -1390,7 +1397,7 @@ export const conversationPanels = {
       {
         title: "[高] 差评集中度上升",
         status: "待处理",
-        source: "Toast AI主动发现",
+        source: "美团餐饮AI助手主动发现",
         trigger: "今天 15:06",
         impact: "苏州/南京片区差评集中，点评和抖音波动明显",
         suggestion: "优先处理出餐速度和打包规范问题",
@@ -1400,7 +1407,7 @@ export const conversationPanels = {
     reports: [
       {
         title: "📈 好差评率及分析报告",
-        source: "Toast AI生成",
+        source: "美团餐饮AI助手生成",
         snapshotId: "#RPT-20260320-103",
         generatedAt: "2026-03-20 15:09",
         summary: "综合好评率 91.96%，但差评集中度上升。",
@@ -1431,7 +1438,7 @@ export const conversationPanels = {
       {
         title: "[中] 单店盈利回看提醒",
         status: "待处理",
-        source: "Toast AI主动发现",
+        source: "美团餐饮AI助手主动发现",
         trigger: "今天 14:21",
         impact: "若连续两周未达标将触发策略调参",
         suggestion: "本周先跟踪日均营收与熟食客单",
@@ -1482,7 +1489,7 @@ export const conversationPanels = {
     reports: [
       {
         title: "📈 任务闭环周报素材",
-        source: "Toast AI生成",
+        source: "美团餐饮AI助手生成",
         snapshotId: "#RPT-20260320-105",
         generatedAt: "2026-03-20 13:45",
         summary: "任务完成率 68%，掉队主因在督导层执行速度。",
@@ -1513,7 +1520,7 @@ export const conversationPanels = {
       {
         title: "[中] 报告待发送",
         status: "待处理",
-        source: "Toast AI主动发现",
+        source: "美团餐饮AI助手主动发现",
         trigger: "今天 11:22",
         impact: "老板模板报告已生成但尚未推送",
         suggestion: "先推老板版，再推区域运营版",
@@ -1554,7 +1561,7 @@ export const conversationPanels = {
       {
         title: "[高] L1 风险命中",
         status: "待处理",
-        source: "Toast AI主动发现",
+        source: "美团餐饮AI助手主动发现",
         trigger: "今天 10:51",
         impact: "今日命中 9 次，其中 L1 高优 3 次",
         suggestion: "立即推送区域经理并附整改动作",
@@ -1564,7 +1571,7 @@ export const conversationPanels = {
     reports: [
       {
         title: "📈 规则命中周报",
-        source: "Toast AI生成",
+        source: "美团餐饮AI助手生成",
         snapshotId: "#RPT-20260320-106",
         generatedAt: "2026-03-20 10:55",
         summary: "AI主动发现占66%，下级提报占34%。",
