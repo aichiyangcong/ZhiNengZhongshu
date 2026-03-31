@@ -1,288 +1,257 @@
 # HANDOFF
 
-更新时间：2026-03-20
+更新时间：2026-03-30（Asia/Shanghai）
 
-## 1. 当前任务背景
+## 当前目标
 
-这是一个 **PC 端前端静态 Demo**，用于表达一个新的 **Agent as a Service 工作台**。
+当前在做的是：
+- 读取 [docs/superpowers/specs/2026-03-30-demo-v2-restructure-design.md](/Users/zhaoziwei/Desktop/新Cowork工具/docs/superpowers/specs/2026-03-30-demo-v2-restructure-design.md)
+- 按 [docs/superpowers/plans/2026-03-30-demo-v2-restructure-implementation-plan.md](/Users/zhaoziwei/Desktop/新Cowork工具/docs/superpowers/plans/2026-03-30-demo-v2-restructure-implementation-plan.md)
+- 用 `subagent-driven-development` 逐个任务执行 Demo V2 信息架构重构
 
-当前阶段目标不是工程化落地，而是：
-- 快速给用户一个可演示、可评审的前端 Demo
-- 把产品表达从“传统页面后台”拉到“AI 数字员工对话工作台”
-- 支持本地直接双击 `index.html` 演示
+## 已完成
 
-强约束：
-- 只做前端 Demo
-- 不接后端接口
-- 不做真实数据持久化
-- 用户明确强调这是 **PC 端，不是 App**
-- 当前优先级是“可看、可点、可讲”，不是工程规范
+### 1. 实现计划已写好
 
-## 2. 用户已经明确确认过的产品方向
+计划文件已落地：
+- [docs/superpowers/plans/2026-03-30-demo-v2-restructure-implementation-plan.md](/Users/zhaoziwei/Desktop/新Cowork工具/docs/superpowers/plans/2026-03-30-demo-v2-restructure-implementation-plan.md)
 
-这些不是猜测，是已经和用户对齐过的：
+这份计划已包含：
+- 7 个任务拆分
+- 每个任务的代码片段
+- 验证命令
+- commit 建议
+- self-review
 
-1. 左侧“最近会话”应该是 **全局 AI 会话流**，按时间倒排，不跟主导航绑定。
-2. 点击某条最近会话后，进入 **会话态**。
-3. 会话态下：
-   - `Main Workspace` 只保留完整会话流
-   - 不要再混入该页面原有的分析卡片、风险列表、任务列表、报告模块
-4. 会话态下左侧高亮规则：
-   - 只高亮当前会话
-   - 主导航全部不要高亮
-5. 右侧“沉淀结果”在会话态下必须收敛成 **当前会话的沉淀结果**，不能继续按页面维度展示。
-6. AI 统一以 `Toast AI` 角色出现。
-7. 系统触发、主动提醒、定时简报，都算 `Toast AI` 在主动汇报，而不是独立的系统消息源。
-8. AI 回复不能只是一大段文字，应该像数字员工向老板汇报：
-   - 结论先行
-   - 再给指标
-   - 再给证据/图表
-   - 再给动作/任务/执行结果
-9. 用户明确接受继续往“会话工作流”方向推进，并允许用 subagents 辅助，但最终落地由主 agent 完成。
+### 2. Task 1 已完成并提交
 
-## 3. 现在已经完成了什么
+Task 1 内容：
+- 重建 `src/data.js` 的种子数据模型
+- 引入 `navigationGroups`
+- 引入 `agents`
+- 给 `recentChats` 增加 `agentId`
+- 更新 `pages.home/analysis/risk/tasks` 的 metadata
+- 新增 `skillMarket` / `connectors` / `channels` / `automationTasks`
 
-### 3.1 文档
+提交信息：
+- `0cdac2a5 feat: add agent-centered demo seed data`
 
-已存在并可作为上下文使用的文档：
-- `progress.md`：当前进度报告，已更新到最近状态
-- `BRD.md`：当前 Demo 的产品定义、交互原则、信息架构与范围基线
-- `other/v2.md`
-- `other/MockData.md`
-- `other/WorkbenchDemo.md`
-- `other/WorkbenchWireframes.md`
-- `other/WorkbenchAscii.md`
-- `other/WorkbenchAscii_v2.md`
-- `other/FrontendDemoTaskPlan.md`
+Task 1 经过了：
+- implementer subagent
+- spec review subagent
+- code quality review subagent
 
-### 3.2 前端运行方式
+Task 1 最终结论：
+- spec compliant
+- 代码质量无 blocker
+- 只是仓库本身很脏，和本任务无关
 
-当前 Demo 文件：
-- `index.html`
-- `src/data.js`
-- `src/main.js`
-- `src/app.js`
-- `src/styles.css`
+### 3. `.git/index.lock` 权限问题已验证过一次可绕过
 
-关键点：
-- `index.html` 现在直接加载 `src/app.js`
-- `src/app.js` 是由 `src/data.js` + `src/main.js` 拼出来的非 module 文件
-- 这样做是为了支持 `file://` 下直接双击打开，不再出现空白页
+在 sandbox 内执行：
 
-### 3.3 交互与状态
+```bash
+git add src/data.js
+```
 
-已经完成：
-- 左侧最近会话改成全局 AI 会话流
-- 最近会话点击后进入独立会话态
-- 会话态下主导航不高亮
-- 会话态下最近会话列表高亮当前会话
-- 会话态下 `Main Workspace` 只渲染会话流
-- 会话态下右侧 `任务 / 提醒 / 报告` 已按当前会话收敛
+会失败：
 
-### 3.4 AI 会话内容
+```text
+fatal: Unable to create '/Users/zhaoziwei/Desktop/新Cowork工具/.git/index.lock': Operation not permitted
+```
 
-已经完成：
-- `Toast AI` 统一承担系统触发 + 主动汇报角色
-- 5 个主要业务场景都做成了多轮会话线程
-- 还额外补了两条独立历史会话
+但使用提升权限的 `git add` / `git commit` 可以成功。
 
-当前已覆盖的会话：
-- 午市经营复盘 + 牛腩补货处理
-- 利润率下降归因拆解到门店和动作
-- 哪家门店风险最高，先处理什么
-- 任务生成后怎么跟进和回看
-- 老板今天想看什么报告
-- 春季菜品上新执行计划
-- 会员复购分析 + 大众点评评价
+所以后续每个任务提交时，大概率都需要再走一次提权。
 
-### 3.5 AI 回复中的结构化卡片
+## 当前进行中
 
-已经接入的卡片类型：
-- `summary` 结论卡
-- `kpis` 指标卡
-- `bars` 条形图卡
-- `table` 证据表卡
-- `task` 任务卡
-- `agent` Agent 执行卡
+### Task 2 正在做，但没有完成
 
-渲染逻辑在 `src/main.js` 的 `renderStructuredCard()`。
+目标任务：
+- 重建 `src/main.js` 的 tab-driven state 和 helper
 
-## 4. 关键文件现状
+已经做进去的部分：
+- `src/main.js` import 已改成读取新的 `data.js` 导出
+- 新 state 已出现：
+  - `tabs`
+  - `activeTabId`
+  - `expandedAgentId`
+  - `automationDetailId`
+  - `automationFilterAgentId`
+  - `automationFilterKind`
+  - `isCreateAgentModalOpen`
+  - `createAgentDraft`
+  - `agents`
+  - `skillMarket`
+  - `connectors`
+  - `channels`
+- 已新增 helper：
+  - `activeTab()`
+  - `activeAgentId()`
+  - `isConversationTab()`
+  - `isManagementTab()`
+  - `openTab()`
+  - `closeTab()`
+  - `syncLeftNav()`
+  - `getAgentById()`
+  - `setConversationContext()`
+- `actionTarget()` 已改成返回 `{ id, type }`
+- `interactiveAttrs()` 已改成输出 `data-nav-id` / `data-nav-type`
 
-### `src/data.js`
+## Task 2 当前真实状态
 
-作用：
-- 所有 mock 数据源
-- 左侧最近会话数据
-- 5 个页面数据
-- 独立会话数据 `conversations`
-- 会话态右侧数据 `conversationPanels`
+`src/main.js` 仍处于“半迁移”状态，不能算完成。
 
-当前最重要的数据结构：
-- `recentChats`
-- `pages`
-- `conversations`
-- `conversationPanels`
+核心问题：
+- 新状态已经加进去了
+- 但旧的 `state.page` 依赖和旧的 `data-page` 事件链还没清干净
+
+我已经跑过 review，结论是：
+- Task 2 当前 **不 spec compliant**
+- 必须先清掉残留旧模型，再继续后面的 Task 3/4/5
+
+### 当前仍残留的旧引用
+
+下面这条命令是当前最重要的检查点：
+
+```bash
+rg -n "state\.page|data-page" src/main.js
+```
+
+当前输出是：
+
+```text
+273:  return state.page === 'home' && pages.home.conversation?.title?.includes('3月目标追踪');
+284:  return state.page === 'analysis' && pages.analysis.conversation?.title?.includes('利润率下降归因拆解到门店和动作');
+295:  return state.page === 'risk' && pages.risk.conversation?.title?.includes('哪家门店风险最高，先处理什么');
+357:  return byPage[state.page] || '';
+382:  return byPage[state.page] || '会话跟进任务';
+1021:    const pagePanels = byPage[state.page] || {};
+1078:              <button class="nav-btn ${!state.activeConversationId && state.page === item.id ? 'active' : ''}" data-page="${item.id}">
+1093:                <button class="link-btn chat-link ${state.activeConversationId === item.id ? 'active' : ''}" data-page="${item.page}" data-conversation="${item.id}">
+1491:  const page = pages[state.page];
+1493:    switch (state.page) {
+1620:        <button class="secondary-btn" data-page="${state.page}">查看全部${panelLabel(state.panelTab)}</button>
+1638:  app.querySelectorAll('[data-page]:not([data-conversation])').forEach((node) => {
+1645:      const next = node.getAttribute('data-page');
+1646:      state.page = next;
+1655:      const next = node.getAttribute('data-page');
+1657:      state.page = next;
+```
+
+这就是下一个 agent 接手 Task 2 时最先要清掉的东西。
+
+## Task 2 下一步应该怎么做
+
+严格只改 [src/main.js](/Users/zhaoziwei/Desktop/新Cowork工具/src/main.js)，不要碰别的文件。
+
+优先完成这几件事：
+
+1. 去掉所有 `state.page` 读取和写入
+2. 去掉所有 `data-page` 渲染和事件绑定
+3. 把这些逻辑改成基于：
+   - `activeTab()`
+   - `activeAgentId()`
+   - `setConversationContext()`
+   - `data-nav-id`
+   - `data-nav-type`
+   - `data-agent-id`
+4. `recentChats` 已经没有 `item.page` 了，所以 `renderLeftNav()` 里会话按钮必须改成使用 `item.agentId`
+5. 不要顺手把 Task 3 的 grouped nav / accordion / tab bar 全做掉
+6. Task 2 的目标只是把 `src/main.js` 从“旧 page 模型”切到“新 tab/context 模型”的最小闭环
+
+建议优先修这些位置：
+- `isGoalTrackingContext`
+- `isProfitAnalysisContext`
+- `isRiskStoreContext`
+- `preferredReportTitleForContext`
+- `preferredTaskTitleForContext`
+- `panelItemsForCurrentPage`
+- `renderLeftNav`
+- `renderMain`
+- `renderRightPanel`
+- `renderApp`
+
+## 当前验证状态
 
 ### `src/main.js`
 
-作用：
-- 全部渲染逻辑
-- 状态管理
-- 点击事件绑定
-
-当前关键状态：
-- `state.page`
-- `state.panelTab`
-- `state.activeConversationId`
-
-当前关键逻辑：
-- `activeConversation()`：返回当前独立会话
-- `panelItemsForCurrentPage()`：如果有 `activeConversationId`，优先走 `conversationPanels`
-- `renderConversation()`：渲染聊天工作区
-- `renderMain()`：如果是会话态，则只渲染对话流
-
-### `src/styles.css`
-
-作用：
-- 三栏布局样式
-- 会话态样式
-- 卡片样式
-- 最近会话列表高亮样式
-
-当前关键样式：
-- `.chat-link.active`
-- `.message-bubble.*`
-- `.message-card*`
-- `.conversation-*`
-- `.artifact-grid`
-- `.mini-kpi-grid`
-- `.bar-chart`
-- `.task-fields`
-- `.agent-steps`
-
-## 5. 我试过什么，什么有效
-
-### 有效的方案
-
-1. **从页面中心转向会话中心**
-   - 之前主区是“页面模块 + 对话卡片”混合
-   - 用户不满意
-   - 改成“点击最近会话 -> 主区只剩完整会话流”后，方向明显更对
-
-2. **把系统触发统一并入 `Toast AI`**
-   - 之前系统提醒和 AI 回答分裂，像两个角色
-   - 合并后更像一个数字员工在主动汇报
-
-3. **AI 回复内插结构化卡片**
-   - 只给文字时，用户明确说阅读负担太重
-   - 加入结论卡、图表卡、任务卡后，更接近用户给的截图和期待
-
-4. **右侧沉淀结果按当前会话收敛**
-   - 之前右侧仍按页面维度展示，和会话态冲突
-   - 改成按 `conversationPanels` 取数据后，逻辑更统一
-
-5. **保留 `src/data.js` / `src/main.js` 作为源文件，再生成 `src/app.js`**
-   - 这是当前最稳妥的本地静态演示方式
-
-## 6. 我试过什么，什么没用 / 不够好
-
-1. **把最近会话做成按页面切换的数据**
-   - 这不符合用户想法
-   - 用户明确指出最近会话应该是全局 AI 会话流，而不是跟随主导航变化
-
-2. **主区保留页面模块，再加一个会话卡片**
-   - 用户不认可
-   - 他要的是“完整会话流工作区”，不是页面内容拼装
-
-3. **只用一问一答的 mock**
-   - 不够真实
-   - 用户明确要求像数字员工汇报，要有多轮上下文和结构化证据
-
-4. **右侧按页面上下文展示沉淀结果**
-   - 在页面模式下可以接受
-   - 但在会话态下用户已经明确否定，要改成当前会话维度
-
-5. **最近会话按钮同时走 `data-page` 和普通页面点击逻辑**
-   - 容易造成高亮和状态不一致
-   - 后来改成独立监听 `data-conversation` 后更稳
-
-## 7. 当前还没完成，但最值得继续做的事
-
-按优先级排序：
-
-### P1
-1. **让推荐问题支持在当前会话中继续追问并追加消息**
-   - 现在推荐问题更多还是静态按钮/跳转型
-   - 下一个 agent 最应该继续把它做成“点击后在当前线程追加一轮 user + AI”
-
-2. **继续加强“老板汇报感”的卡片与图表**
-   - 当前有条形图卡和 KPI 卡，但还可以再补：
-     - 趋势图占位卡
-     - 门店对比卡
-     - 推送编排卡
-     - 会话小结卡
-
-### P2
-3. **把右侧进一步固定成会话产物结构**
-   - 现在右侧虽然已经按当前会话收敛
-   - 但还可以进一步收敛成更稳定的信息架构，比如：
-     - 本次会话小结
-     - 任务
-     - Agent 执行
-     - 协作同步
-     - 报告输出
-
-4. **继续增加更多会话内容密度**
-   - 特别是 `conv-6`、`conv-7` 这两条独立会话，还可以继续做厚
-
-### P3
-5. **让页面模式和会话模式之间的切换关系更清楚**
-   - 目前已经可用，但还有继续整理空间
-
-## 8. 下一个 agent 最好怎么开始
-
-建议顺序：
-
-1. 先看 `HANDOFF.md`
-2. 再看 `BRD.md`
-3. 再看 `progress.md`
-4. 直接打开：
-   - `src/data.js`
-   - `src/main.js`
-   - `src/styles.css`
-5. 刷新 `index.html` 本地看当前效果
-6. 优先实现：
-   - 推荐问题追加到当前会话线程
-   - 会话型图表/卡片再加强一轮
-
-## 9. 重要注意事项
-
-- 不要把产品方向又拉回“页面后台”模式。用户已经明确要 **会话工作流**。
-- 不要把系统消息重新拆成独立系统角色。用户要的是统一的 `Toast AI` 数字员工。
-- 不要在会话态里再塞回分析页/风险页/任务页/报告页的大块模块。
-- 不要忘记这是 **PC 端 Demo**，不是 App。
-- 不要破坏 `index.html` 直接双击可运行这条要求。
-- 修改 `src/data.js` / `src/main.js` 后，记得重新生成 `src/app.js`。
-
-## 10. 每次改完都要做的事
+当前语法是通的：
 
 ```bash
-python3 - <<'PY'
-from pathlib import Path
-root = Path('/Users/zhaoziwei/Desktop/新Cowork工具')
-data = (root / 'src/data.js').read_text()
-main = (root / 'src/main.js').read_text()
-main_lines = main.splitlines()
-if main_lines and main_lines[0].startswith('import '):
-    main = '\n'.join(main_lines[1:]) + ('\n' if main.endswith('\n') else '')
-app = data.replace('export const ', 'const ') + '\n' + main
-(root / 'src/app.js').write_text(app)
-PY
 node --check src/main.js
-node --check src/app.js
 ```
 
-## 11. 当前状态一句话总结
+结果：
+- 通过
 
-当前 Demo 已经从“业务页面 + 对话卡片”推进到了“全局最近会话 + 独立会话态 + 会话维度沉淀结果”的形态，下一步最核心的是让推荐追问真正追加到当前线程，并把 AI 汇报卡片再做得更像老板工作台。
+注意：
+- “语法通过”不代表 Task 2 完成
+- review 已经明确指出它仍是半迁移状态
+
+## 已关闭的 subagents
+
+这次执行里已经用过并关闭的 subagents：
+- Task 1 implementer
+- Task 1 spec reviewer
+- Task 1 code quality reviewer
+- 一个失效的 Task 2 implementer
+- 一个被用户中断后关闭的 Task 2 implementer
+
+所以新的 agent 不需要尝试恢复旧 subagent，直接从当前工作树继续即可。
+
+## 当前 git 状态
+
+最近提交：
+
+```text
+0cdac2a5 feat: add agent-centered demo seed data
+a654e875 v1版本
+e8a2025f docs: add replit deployment guide and sync data updates
+3cfe993b feat: unify conversation action layering and panel linkage
+d9f9552f v1
+```
+
+工作树状态重点：
+- `src/main.js` 有未提交改动
+- 仓库里有大量 `temp/chrome-debug/**` 脏文件
+
+结论：
+- 后续 commit 时必须只 stage 目标文件
+- 很可能仍要提权执行 `git add src/main.js` 和 `git commit`
+
+## 接手建议
+
+下一个 agent 的最佳接手顺序：
+
+1. 打开 [docs/superpowers/plans/2026-03-30-demo-v2-restructure-implementation-plan.md](/Users/zhaoziwei/Desktop/新Cowork工具/docs/superpowers/plans/2026-03-30-demo-v2-restructure-implementation-plan.md)
+2. 从 Task 2 继续，不要重做 Task 1
+3. 先跑：
+
+```bash
+node --check src/main.js
+rg -n "state\.page|data-page" src/main.js
+```
+
+4. 把 Task 2 收敛到 spec compliant
+5. 做 Task 2 的 spec review
+6. 做 Task 2 的 code quality review
+7. 如 review 通过，再提权执行：
+
+```bash
+git add src/main.js
+git commit -m "refactor: add tab-driven workspace state"
+```
+
+8. 然后再进入 Task 3
+
+## 不要做的事
+
+- 不要回退 Task 1
+- 不要重写 `src/data.js`
+- 不要现在就改 `src/styles.css`
+- 不要现在就生成 `src/app.js`
+- 不要现在就做 Task 3/4 的完整 UI 重构
+- 不要试图清理整个 `temp/chrome-debug` 脏目录
+

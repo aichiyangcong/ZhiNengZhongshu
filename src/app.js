@@ -5,13 +5,169 @@ const appMeta = {
   date: "2026-03-20",
 };
 
-const navigation = [
-  { id: "home", label: "今日工作台" },
-  { id: "analysis", label: "经营分析" },
-  { id: "risk", label: "门店风险" },
-  { id: "tasks", label: "任务协同" },
-  { id: "reports", label: "报告中心" },
-  { id: "push", label: "定时/规则推送" },
+const navigationGroups = {
+  main: [
+    { id: "home", label: "今日工作台", icon: "🏠", type: "home" },
+  ],
+  tools: [
+    { id: "skills", label: "技能广场", icon: "⚡", type: "config" },
+    { id: "connectors", label: "应用授权", icon: "🔗", type: "config" },
+    { id: "channels", label: "消息渠道", icon: "💬", type: "config" },
+    { id: "automation", label: "定时任务", icon: "⏰", type: "automation" },
+  ],
+};
+
+const agents = [
+  {
+    id: "analysis",
+    name: "经营分析专家",
+    icon: "📊",
+    desc: "专注利润归因、渠道结构分析、目标追踪与动作建议",
+    skills: ["利润诊断", "渠道拆解", "活动ROI", "目标追踪"],
+    connectors: ["meituan", "member"],
+    channels: ["wecom"],
+  },
+  {
+    id: "risk",
+    name: "门店风险专家",
+    icon: "⚠️",
+    desc: "识别门店风险、差评归因、库存预警与闭环处置",
+    skills: ["差评聚类", "库存预警", "风险评级", "QSC巡检"],
+    connectors: ["meituan"],
+    channels: ["wecom", "feishu"],
+  },
+  {
+    id: "tasks",
+    name: "任务协同专家",
+    icon: "📋",
+    desc: "任务拆解、派发、催办、回看与闭环管理",
+    skills: ["任务拆解", "责任链路", "超时预警", "自动回看"],
+    connectors: ["meituan"],
+    channels: ["wecom"],
+  },
+];
+
+const skillMarket = [
+  { id: "revenue", name: "查昨日营收", icon: "📈", desc: "一键查询昨日各渠道营收", installed: true, usedBy: ["home", "analysis"] },
+  { id: "weekly-report", name: "生成周报", icon: "📊", desc: "按模板自动生成周期报告", installed: true, usedBy: ["home", "analysis"] },
+  { id: "alert-rule", name: "建预警规则", icon: "🔔", desc: "配置阈值和推送对象", installed: true, usedBy: ["risk"] },
+  { id: "dish-analysis", name: "菜品表现分析", icon: "🍽️", desc: "按菜品维度拆解销量和评价", installed: false, usedBy: [] },
+  { id: "inspection", name: "巡检任务生成", icon: "📋", desc: "基于风险自动生成巡检清单", installed: false, usedBy: [] },
+  { id: "member", name: "会员贡献分析", icon: "💰", desc: "会员渠道占比和复购趋势", installed: false, usedBy: [] },
+];
+
+const connectors = [
+  { id: "meituan", name: "美团经营数据", status: "connected", desc: "POS/外卖/团购/评价/督导", connectedAt: "3月20日", usedBy: ["home", "analysis", "risk"] },
+  { id: "member", name: "会员系统", status: "connected", desc: "会员画像/复购/渠道占比", connectedAt: "3月18日", usedBy: ["analysis"] },
+  { id: "supply", name: "供应链系统", status: "disconnected", desc: "库存/采购/供应商管理", usedBy: [] },
+  { id: "finance", name: "财务系统", status: "disconnected", desc: "利润/成本/预算", usedBy: [] },
+];
+
+const channels = [
+  { id: "wecom", name: "企业微信", status: "enabled", desc: "推送日报/周报 · 接收任务回执", usedBy: ["analysis", "tasks"] },
+  { id: "feishu", name: "飞书", status: "disabled", desc: "规则推送 · 专题订阅", usedBy: ["risk"] },
+  { id: "dingtalk", name: "钉钉", status: "disabled", desc: "告警推送 · 任务协同", usedBy: [] },
+  { id: "email", name: "邮件", status: "partial", desc: "仅周报推送", usedBy: ["analysis"] },
+];
+
+const automationTasks = [
+  {
+    id: "auto-1",
+    agentId: "analysis",
+    agentName: "经营分析专家",
+    kind: "report",
+    title: "老板日报推送",
+    schedule: "每日 08:00",
+    channel: "企微",
+    desc: "全国经营简报",
+    status: "active",
+    totalRuns: 28,
+    successRuns: 27,
+    failedRuns: 1,
+    lastTrigger: "今天 08:00",
+    history: [
+      { date: "3月30日", title: "全国经营简报", status: "success" },
+      { date: "3月29日", title: "全国经营简报", status: "success" },
+      { date: "3月28日", title: "全国经营简报", status: "failed" },
+      { date: "3月27日", title: "全国经营简报", status: "success" },
+    ],
+  },
+  {
+    id: "auto-2",
+    agentId: "analysis",
+    agentName: "经营分析专家",
+    kind: "report",
+    title: "区域周报推送",
+    schedule: "周一 09:00",
+    channel: "工作台+邮件",
+    desc: "华东经营复盘",
+    status: "active",
+    totalRuns: 4,
+    successRuns: 4,
+    failedRuns: 0,
+    lastTrigger: "3月18日",
+    history: [
+      { date: "3月25日", title: "华东经营复盘", status: "success" },
+      { date: "3月18日", title: "华东经营复盘", status: "success" },
+    ],
+  },
+  {
+    id: "auto-3",
+    agentId: "risk",
+    agentName: "门店风险专家",
+    kind: "alert",
+    title: "外卖订单下滑预警",
+    schedule: "实时",
+    channel: "工作台+飞书",
+    desc: "订单↓15%+差评↑",
+    status: "active",
+    totalRuns: 42,
+    successRuns: 39,
+    failedRuns: 3,
+    lastTrigger: "今天 10:22",
+    history: [
+      { date: "3月30日 10:22", title: "苏州片区预警", status: "success" },
+      { date: "3月30日 09:15", title: "南京片区预警", status: "success" },
+      { date: "3月29日 14:30", title: "杭州片区预警", status: "failed" },
+    ],
+  },
+  {
+    id: "auto-4",
+    agentId: "risk",
+    agentName: "门店风险专家",
+    kind: "alert",
+    title: "库存断货风险提醒",
+    schedule: "实时",
+    channel: "工作台",
+    desc: "关键食材低于安全阈值",
+    status: "active",
+    totalRuns: 15,
+    successRuns: 15,
+    failedRuns: 0,
+    lastTrigger: "今天 08:55",
+    history: [
+      { date: "3月30日 08:55", title: "牛腩库存预警", status: "success" },
+    ],
+  },
+  {
+    id: "auto-5",
+    agentId: "tasks",
+    agentName: "任务协同专家",
+    kind: "task",
+    title: "专题周报订阅",
+    schedule: "周五 17:00",
+    channel: "飞书",
+    desc: "春季上新/新店口碑",
+    status: "pending",
+    totalRuns: 2,
+    successRuns: 2,
+    failedRuns: 0,
+    lastTrigger: "3月21日",
+    history: [
+      { date: "3月28日", title: "春季上新专题", status: "success" },
+      { date: "3月21日", title: "新店口碑专题", status: "success" },
+    ],
+  },
 ];
 
 const recentChats = [
@@ -19,7 +175,7 @@ const recentChats = [
     id: "conv-1",
     title: "3月目标追踪：渠道/品类/区域缺口",
     time: "3 分钟前",
-    page: "home",
+    agentId: "home",
     summary: "总目标达成约50%，线下缺口更大，需优先追赶三名掉队负责人",
     unread: 0,
   },
@@ -27,7 +183,7 @@ const recentChats = [
     id: "conv-2",
     title: "周三活动复盘：营收贡献与利润稀释",
     time: "8 分钟前",
-    page: "analysis",
+    agentId: "analysis",
     summary: "活动增收有效，但两片区执行次数高、利润贡献低，需要A/B收缩策略",
     unread: 0,
   },
@@ -35,7 +191,7 @@ const recentChats = [
     id: "conv-3",
     title: "平台口碑风险：好评率/差评/QSC归因",
     time: "15 分钟前",
-    page: "risk",
+    agentId: "risk",
     summary: "综合好评率提升但差评集中度上升，QSC问题聚焦出餐、打包、食安记录",
     unread: 0,
   },
@@ -43,7 +199,7 @@ const recentChats = [
     id: "conv-4",
     title: "单店盈利提升方案：90天执行版",
     time: "22 分钟前",
-    page: "analysis",
+    agentId: "analysis",
     summary: "基于xlsx生成佳兆业店90天方案：线下引流+外卖投流+团购优化",
     unread: 0,
   },
@@ -51,7 +207,7 @@ const recentChats = [
     id: "conv-5",
     title: "总部任务闭环：拆解、派发、回看",
     time: "39 分钟前",
-    page: "tasks",
+    agentId: "tasks",
     summary: "总部任务拆解完成度68%，苏州片区超时风险高，需24h追赶",
     unread: 0,
   },
@@ -59,15 +215,15 @@ const recentChats = [
     id: "conv-6",
     title: "周营收+好差评综合报告沉淀",
     time: "1 小时前",
-    page: "reports",
+    agentId: "analysis",
     summary: "周营收同比+8.5%，外卖占比42%，已生成图表快照并可下载",
     unread: 0,
   },
   {
     id: "conv-7",
-    title: "定时/规则推送命中优先级",
+    title: "定时规则推送命中优先级",
     time: "2 小时前",
-    page: "push",
+    agentId: "home",
     summary: "今日命中9次，L1风险3次；下级提报占34%，建议分层推送",
     unread: 0,
   },
@@ -96,6 +252,7 @@ const pages = {
     title: "今日工作台",
     subtitle: "今日重点：利润、差评、库存",
     defaultPanel: "alerts",
+    agentId: "home",
     focus: {
       title: "今天最该关注的 3 件事",
       items: [
@@ -245,11 +402,12 @@ const pages = {
     },
   },
   analysis: {
-    title: "经营分析",
-    subtitle: "华东区利润率下降归因 + 结论 + 建议",
+    title: "经营分析专家",
+    subtitle: "利润归因、渠道结构分析、目标追踪与动作建议",
     defaultPanel: "reports",
+    agentId: "analysis",
     focus: {
-      title: "Query + 结论（区域运营关注）",
+      title: "区域运营关注摘要",
       query: "华东区目标达成进度怎么样？按渠道、品类、区域和督导拆开，并给出盈利提升方案。",
       conclusion: "当前达成 91%，缺口主要来自外卖和生鲜；南京/苏州两区拉低整体，建议优先修复低毛利活动并复制杭州督导样板店策略。",
       blocks: [
@@ -399,9 +557,10 @@ const pages = {
     },
   },
   risk: {
-    title: "门店风险",
-    subtitle: "系统自动识别的高优先级问题",
-    defaultPanel: "tasks",
+    title: "门店风险专家",
+    subtitle: "识别门店风险、差评归因、库存预警与闭环处置",
+    defaultPanel: "alerts",
+    agentId: "risk",
     focus: {
       title: "督导区域风险视角",
       items: [
@@ -515,9 +674,10 @@ const pages = {
     },
   },
   tasks: {
-    title: "任务协同",
-    subtitle: "AI 洞察 + 人工创建的执行闭环",
+    title: "任务协同专家",
+    subtitle: "任务拆解、派发、催办、回看与闭环管理",
     defaultPanel: "tasks",
+    agentId: "tasks",
     focus: {
       title: "任务协同总览",
       items: [
@@ -1589,16 +1749,125 @@ const conversationPanels = {
 };
 
 
+const navLabelMap = [...navigationGroups.main, ...(navigationGroups.tools || [])].reduce((acc, item) => {
+  acc[item.id] = item.label;
+  return acc;
+}, {});
+
 const state = {
-  page: 'home',
+  tabs: [{ id: 'home', type: 'home', label: '今日工作台', closable: false, agentId: 'home' }],
+  activeTabId: 'home',
+  expandedAgentId: 'home',
   panelTab: pages.home.defaultPanel,
   activeConversationId: null,
+  automationDetailId: null,
+  automationFilterAgentId: null,
+  automationFilterKind: null,
+  isCreateAgentModalOpen: false,
+  createAgentDraft: {
+    name: '',
+    desc: '',
+    icon: '🧠',
+    skills: [],
+    connectors: [],
+    channels: [],
+  },
+  agents: [...agents],
+  skillMarket: structuredClone(skillMarket),
+  connectors: structuredClone(connectors),
+  channels: structuredClone(channels),
   dynamicPanels: {
     tasks: [],
     alerts: [],
     reports: [],
   },
 };
+
+function activeTab() {
+  return state.tabs.find((tab) => tab.id === state.activeTabId) || state.tabs[0];
+}
+
+function activeAgentId() {
+  const tab = activeTab();
+  return tab?.agentId || 'home';
+}
+
+function isConversationTab(tab = activeTab()) {
+  return ['home', 'agent', 'history'].includes(tab?.type);
+}
+
+function isManagementTab(tab = activeTab()) {
+  return ['config', 'automation'].includes(tab?.type);
+}
+
+function openTab(id, type, label, extra = {}) {
+  const existing = state.tabs.find((tab) => tab.id === id);
+  if (existing) {
+    Object.assign(existing, { type, label, ...extra });
+  } else {
+    state.tabs.push({ id, type, label, closable: id !== 'home', ...extra });
+  }
+  state.activeTabId = id;
+  syncLeftNav(id);
+}
+
+function closeTab(id) {
+  if (id === 'home') return;
+  const index = state.tabs.findIndex((tab) => tab.id === id);
+  if (index < 0) return;
+  state.tabs.splice(index, 1);
+  const fallback = state.tabs[Math.max(0, index - 1)] || state.tabs[0];
+  state.activeTabId = fallback.id;
+  syncLeftNav(fallback.id);
+}
+
+function syncLeftNav(tabId) {
+  const tab = state.tabs.find((item) => item.id === tabId) || activeTab();
+  if (!tab) return;
+  state.activeConversationId = tab.conversationId || null;
+  state.automationDetailId = tab.type === 'automation' ? state.automationDetailId : null;
+  if (tab.type === 'config' || tab.type === 'automation') {
+    state.expandedAgentId = null;
+    state.panelTab = 'alerts';
+    return;
+  }
+  state.expandedAgentId = tab.agentId || 'home';
+  state.panelTab = pages[tab.agentId || 'home']?.defaultPanel || 'alerts';
+}
+
+function getAgentById(agentId) {
+  if (agentId === 'home') {
+    return {
+      id: 'home',
+      name: '今日工作台',
+      icon: '🏠',
+      desc: '主智能体，通用对话入口',
+      skills: ['查昨日营收', '生成周报'],
+      connectors: ['meituan'],
+      channels: ['wecom'],
+    };
+  }
+  return state.agents.find((agent) => agent.id === agentId);
+}
+
+function setConversationContext(agentId, conversationId) {
+  const label = agentId === 'home' ? '今日工作台' : getAgentById(agentId).name;
+  openTab(agentId, conversationId ? 'history' : agentId === 'home' ? 'home' : 'agent', label, {
+    agentId,
+    conversationId: conversationId || null,
+  });
+}
+
+function openNewConversationTab(agentId) {
+  const baseLabel = agentId === 'home' ? '今日工作台' : (getAgentById(agentId)?.name || agentId);
+  const type = agentId === 'home' ? 'home' : 'agent';
+  const id = `${agentId}-draft-${Date.now()}`;
+  openTab(id, type, `${baseLabel} · 新会话`, {
+    agentId,
+    conversationId: null,
+    isDraft: true,
+  });
+}
 
 const app = document.querySelector('#app');
 
@@ -1707,49 +1976,29 @@ function filterConversationCardActions(actions = []) {
 
 function actionTarget(label) {
   const map = {
-    '为什么利润下降': 'analysis',
-    '查看异常门店': 'risk',
-    '生成整改任务': 'tasks',
-    '华东区昨天利润率为什么下降？': 'analysis',
-    '新店差评超过 3 条的有哪些？': 'risk',
-    '帮我建一个外卖订单下滑预警': 'home',
-    '展开看南京门店': 'analysis',
-    '只看外卖渠道': 'analysis',
-    '生成运营整改任务': 'tasks',
-    '加入巡检计划': 'tasks',
-    '推送督导通知': 'tasks',
-    '立即推送': 'reports',
-    '保存为模板': 'reports',
-    '复制到其他区域': 'reports',
-    '新建订阅': 'reports',
-    '查看报告': 'reports',
-    '查看异常门店': 'risk',
-    '查看库存告警': 'risk',
-    '生成巡检任务': 'risk',
-    '保存为报告': 'reports',
-    '生成任务': 'tasks',
-    '修改问题': 'analysis',
-    '查看全部提醒': 'home',
-    '查看全部任务': 'tasks',
-    '查看回看': 'tasks',
-    '生成周报素材': 'reports',
-    '标记处理中': 'tasks',
-    '转派': 'tasks',
-    '失效': 'tasks',
-    '查看规则详情': 'push',
-    '查看图表': 'reports',
-    '下载报告': 'reports',
-    '看风险门店': 'risk',
-    '看任务进度': 'tasks',
-    '看利润缺口': 'analysis',
-    '看定时推送': 'push',
+    '为什么利润下降': { id: 'analysis', type: 'agent' },
+    '查看异常门店': { id: 'risk', type: 'agent' },
+    '生成整改任务': { id: 'tasks', type: 'agent' },
+    '华东区昨天利润率为什么下降？': { id: 'analysis', type: 'agent' },
+    '新店差评超过 3 条的有哪些？': { id: 'risk', type: 'agent' },
+    '帮我建一个外卖订单下滑预警': { id: 'home', type: 'home' },
+    '展开看南京门店': { id: 'analysis', type: 'agent' },
+    '只看外卖渠道': { id: 'analysis', type: 'agent' },
+    '生成运营整改任务': { id: 'tasks', type: 'agent' },
+    '加入巡检计划': { id: 'tasks', type: 'agent' },
+    '推送督导通知': { id: 'tasks', type: 'agent' },
+    '查看规则详情': { id: 'automation', type: 'automation' },
+    '看风险门店': { id: 'risk', type: 'agent' },
+    '看任务进度': { id: 'tasks', type: 'agent' },
+    '看利润缺口': { id: 'analysis', type: 'agent' },
+    '看定时推送': { id: 'automation', type: 'automation' },
   };
   return map[label] || null;
 }
 
 function interactiveAttrs(label) {
   const target = actionTarget(label);
-  return target ? `data-page="${target}"` : 'data-action="noop"';
+  return target ? `data-nav-id="${target.id}" data-nav-type="${target.type}"` : 'data-action="noop"';
 }
 
 function activeConversation() {
@@ -1763,7 +2012,7 @@ function isGoalTrackingContext() {
   if (state.activeConversationId) {
     return false;
   }
-  return state.page === 'home' && pages.home.conversation?.title?.includes('3月目标追踪');
+  return isConversationTab() && activeAgentId() === 'home' && pages.home.conversation?.title?.includes('3月目标追踪');
 }
 
 function isProfitAnalysisContext() {
@@ -1774,7 +2023,7 @@ function isProfitAnalysisContext() {
   if (state.activeConversationId) {
     return false;
   }
-  return state.page === 'analysis' && pages.analysis.conversation?.title?.includes('利润率下降归因拆解到门店和动作');
+  return isConversationTab() && activeAgentId() === 'analysis' && pages.analysis.conversation?.title?.includes('利润率下降归因拆解到门店和动作');
 }
 
 function isRiskStoreContext() {
@@ -1785,7 +2034,7 @@ function isRiskStoreContext() {
   if (state.activeConversationId) {
     return false;
   }
-  return state.page === 'risk' && pages.risk.conversation?.title?.includes('哪家门店风险最高，先处理什么');
+  return isConversationTab() && activeAgentId() === 'risk' && pages.risk.conversation?.title?.includes('哪家门店风险最高，先处理什么');
 }
 
 function isSingleStoreProfitContext() {
@@ -1808,7 +2057,7 @@ function upsertDynamicPanelItem(tab, item) {
 function panelItemsForTab(tab) {
   const prev = state.panelTab;
   state.panelTab = tab;
-  const items = panelItemsForCurrentPage();
+  const items = panelItemsForCurrentContext();
   state.panelTab = prev;
   return items;
 }
@@ -1839,15 +2088,13 @@ function preferredReportTitleForContext() {
     return byConversation[state.activeConversationId];
   }
 
-  const byPage = {
+  const byAgent = {
     home: '📈 周营收分析',
     analysis: '📈 目标达成与缺口分析',
     risk: '📈 风险门店周报',
     tasks: '📈 任务闭环复盘',
-    reports: '📈 周营收分析',
-    push: '📈 推送规则命中周报',
   };
-  return byPage[state.page] || '';
+  return byAgent[activeAgentId()] || '';
 }
 
 function preferredTaskTitleForContext() {
@@ -1864,15 +2111,13 @@ function preferredTaskTitleForContext() {
     return byConversation[state.activeConversationId];
   }
 
-  const byPage = {
+  const byAgent = {
     home: '片区目标追赶任务',
     analysis: '利润整改任务',
     risk: '风险闭环任务',
     tasks: '总部任务24h追赶',
-    reports: '综合报告推送任务',
-    push: '规则分层推送调整',
   };
-  return byPage[state.page] || '会话跟进任务';
+  return byAgent[activeAgentId()] || '会话跟进任务';
 }
 
 function focusPanelCard(selector, targetTitle) {
@@ -2120,7 +2365,7 @@ function handleStatusAction(label) {
     status: statusByAction[label] || '进行中',
     meta: `状态流已更新：${label}（Mock）`,
   });
-  renderApp();
+  refreshApp();
   showToast(`已执行：${label}（仅Mock状态流）`);
   return true;
 }
@@ -2131,7 +2376,7 @@ function handleStructuredAction(label) {
   if (semantic === 'primary-report' || semantic === 'chart') {
     const result = ensureReportForCurrentContext();
     state.panelTab = 'reports';
-    renderApp();
+    refreshApp();
     focusReportCard(result.title);
     showToast(result.created ? `已新增并定位报告：${result.title}` : `已定位到报告：${result.title}`);
     return true;
@@ -2140,7 +2385,7 @@ function handleStructuredAction(label) {
   if (semantic === 'primary-task') {
     const result = upsertPrimaryTaskForCurrentContext();
     state.panelTab = 'tasks';
-    renderApp();
+    refreshApp();
     focusTaskCard(result.title);
     showToast(result.existed ? `已更新任务：${result.title}` : `已新增任务：${result.title}`);
     return true;
@@ -2150,10 +2395,19 @@ function handleStructuredAction(label) {
     return handleStatusAction(label);
   }
 
+  if (label === '查看规则详情' || label === '看定时推送') {
+    state.automationFilterAgentId = activeAgentId();
+    state.automationFilterKind = null;
+    state.automationDetailId = null;
+    openTab('automation', 'automation', '定时任务');
+    refreshApp();
+    return true;
+  }
+
   if (semantic === 'review') {
     const result = ensureReplayTaskForCurrentContext();
     state.panelTab = 'tasks';
-    renderApp();
+    refreshApp();
     focusTaskCard(result.title);
     showToast(result.created ? `已补齐回看并定位：${result.title}` : `已定位回看：${result.title}`);
     return true;
@@ -2168,14 +2422,9 @@ function handleStructuredAction(label) {
   return false;
 }
 
-function panelItemsForCurrentPage() {
-  let baseItems = [];
-
-  if (state.activeConversationId) {
-    const scopedPanels = conversationPanels[state.activeConversationId] || {};
-    baseItems = scopedPanels[state.panelTab] || [];
-  } else {
-    const byPage = {
+function panelContext() {
+  const tab = activeTab();
+  const byAgent = {
       home: {
         tasks: [
           {
@@ -2392,134 +2641,40 @@ function panelItemsForCurrentPage() {
           },
         ],
       },
-      reports: {
-        alerts: [
-          {
-            title: '[中] 待发送报告提醒',
-            status: '待处理',
-            source: '美团餐饮AI助手主动发现',
-            trigger: '今天 08:45',
-            impact: '华东经营复盘仍未推送',
-            suggestion: '先发老板日报，再发区域周报',
-            actions: ['查看报告'],
-          },
-        ],
-        tasks: [
-          {
-            title: '报告补充确认任务',
-            status: '待处理',
-            chain: '区域负责人 → 数据专员',
-            due: '2026-03-20 17:00',
-            progress: '50%（1/2 报告）',
-            meta: '需补录督导区域平台拆分图',
-            actions: ['查看报告'],
-          },
-        ],
-        reports: [
-          {
-            title: '📈 周营收分析',
-            source: '用户创建',
-            snapshotId: '#RPT-20260316-003',
-            generatedAt: '2026-03-16 09:00',
-            summary: '本周营收同比增长 8.5%，外卖占比提升。',
-            metrics: [
-              { label: '周营收', value: '¥128,450' },
-              { label: '同比', value: '+8.5%' },
-              { label: '外卖占比', value: '42%' },
-            ],
-            verified: '已验证',
-            evidence: [
-              '综合好评率 96.2%，环比 +1.1pct',
-              '督导区域平台分布：赵琳片区外卖占比 46%',
-              '差评门店 QSC：出餐慢、打包漏液',
-            ],
-            actions: ['查看图表', '下载报告'],
-          },
-          {
-            title: '📈 好差评率及分析报告',
-            source: '美团餐饮AI助手生成',
-            snapshotId: '#RPT-20260320-007',
-            generatedAt: '2026-03-20 09:20',
-            summary: '综合好评率提升，但苏州片区差评仍偏高。',
-            metrics: [
-              { label: '综合好评率', value: '96.2%' },
-              { label: '环比', value: '+1.1pct' },
-              { label: '差评门店', value: '3 家' },
-            ],
-            verified: '已验证',
-            evidence: [
-              '平台分布：美团好评率 95.8%，点评 96.9%',
-              '苏州片区差评率 8.7%，环比 +1.4pct',
-              'QSC 主要问题：出餐速度、食安记录、打包规范',
-            ],
-            actions: ['查看图表', '下载报告'],
-          },
-        ],
-      },
-      push: {
-        tasks: [
-          {
-            title: '定时推送维护任务',
-            status: '处理中',
-            chain: '区域负责人 → 数据运营',
-            due: '2026-03-21 10:00',
-            progress: '67%（4/6 规则）',
-            meta: '需要复核老板日报推送窗口',
-            actions: ['看定时推送'],
-          },
-        ],
-        alerts: [
-          {
-            title: '[高] 区域利润率下滑推送命中',
-            status: '待处理',
-            source: '美团餐饮AI助手主动发现',
-            trigger: '今天 10:50',
-            impact: '苏州南区利润率 -1.6pct',
-            suggestion: '立即触发区域经理提醒并附整改建议',
-            actions: ['查看规则详情'],
-          },
-          {
-            title: '[中] 下级提报：差评率上升',
-            status: '待处理',
-            source: '下级提报',
-            trigger: '今天 09:30',
-            impact: '南京北区差评率 +1.2pct',
-            suggestion: '并入 12:00 汇总推送',
-            actions: ['查看规则详情'],
-          },
-        ],
-        reports: [
-          {
-            title: '📈 推送规则命中周报',
-            source: '美团餐饮AI助手生成',
-            snapshotId: '#RPT-20260320-PSH',
-            generatedAt: '2026-03-20 11:20',
-            summary: '规则命中 9 次，高优风险 3 次，均已触达负责人。',
-            metrics: [
-              { label: '命中次数', value: '9 次' },
-              { label: '高优风险', value: '3 次' },
-              { label: '触达率', value: '100%' },
-            ],
-            verified: '已验证',
-            evidence: [
-              'L1 风险实时推送平均延迟 2 分钟',
-              'L2 经营提醒按 2 小时汇总已生效',
-              '下级提报占提醒来源 34%',
-            ],
-            actions: ['查看图表', '下载报告'],
-          },
-        ],
-      },
     };
-    const pagePanels = byPage[state.page] || {};
-    baseItems = pagePanels[state.panelTab] || sharedPanels[state.panelTab] || [];
+
+  let title = '';
+  let agentId = null;
+  let items = [];
+
+  if (tab?.type === 'history' && tab.conversationId) {
+    title = `📌 会话：${recentChats.find((item) => item.id === tab.conversationId)?.title || '当前会话'}`;
+    agentId = tab.agentId;
+    items = conversationPanels[tab.conversationId]?.[state.panelTab] || [];
+  } else if (tab?.type === 'home' || tab?.type === 'agent') {
+    agentId = tab.agentId || 'home';
+    title = agentId === 'home' ? '📌 今日工作台' : `📌 ${getAgentById(agentId)?.name || agentId} 的工作成果`;
+    items = byAgent[agentId]?.[state.panelTab] || sharedPanels[state.panelTab] || [];
   }
 
   const dynamic = state.dynamicPanels[state.panelTab] || [];
-  if (dynamic.length) {
-    return [...dynamic, ...baseItems];
-  }
-  return baseItems;
+  return {
+    title,
+    agentId,
+    items: dynamic.length ? [...dynamic, ...items] : items,
+  };
+}
+
+function panelItemsForCurrentContext() {
+  return panelContext().items;
+}
+
+function jumpToAutomationFromPanel() {
+  const agentId = panelContext().agentId;
+  state.automationFilterAgentId = agentId;
+  state.automationFilterKind = state.panelTab === 'tasks' ? 'task' : state.panelTab === 'alerts' ? 'alert' : 'report';
+  state.automationDetailId = null;
+  openTab('automation', 'automation', '定时任务');
 }
 
 function showToast(message) {
@@ -2546,12 +2701,14 @@ function renderTopBar() {
           <strong>${escapeHtml(appMeta.role)}</strong>
           <span>${escapeHtml(appMeta.scope)}</span>
         </div>
-        <div class="topbar-actions">
-          <button class="topbar-chip" data-action="noop">日期 ${escapeHtml(appMeta.date)}</button>
-          <button class="topbar-chip" data-action="noop">搜索</button>
+        <div class="topbar-status">
+          <span class="topbar-status-item"><i>数据</i> 最新</span>
+          <span class="topbar-status-item"><i>连接</i> 正常</span>
+          <span class="topbar-status-item"><i>风险</i> 3 项待处理</span>
         </div>
       </div>
       <div class="topbar-actions">
+        <button class="topbar-chip" data-action="noop">${escapeHtml(appMeta.date)}</button>
         <button class="icon-btn" data-action="noop" aria-label="通知">铃</button>
         <button class="icon-btn" data-action="noop" aria-label="用户">人</button>
       </div>
@@ -2559,39 +2716,122 @@ function renderTopBar() {
   `;
 }
 
-function renderLeftNav() {
+function renderConversationLinks(agentId) {
+  return recentChats
+    .filter((item) => item.agentId === agentId)
+    .map(
+      (item) => `
+        <button
+          class="link-btn chat-link ${state.activeConversationId === item.id ? 'active' : ''}"
+          data-agent-id="${agentId}"
+          data-conversation="${item.id}"
+        >
+          <span class="chat-link-top">
+            <span class="chat-link-title">${escapeHtml(item.title)}</span>
+            <span class="chat-link-time">${escapeHtml(item.time)}</span>
+          </span>
+        </button>
+      `,
+    )
+    .join('');
+}
+
+function renderAgentNavItem(agent) {
+  const expanded = state.expandedAgentId === agent.id;
+  const active = isConversationTab() && activeAgentId() === agent.id;
   return `
-    <aside class="left-nav">
-      <div>
-        <div class="nav-group-title">主导航</div>
-        <div class="nav-list">
-          ${navigation
-            .map(
-              (item) => `
-              <button class="nav-btn ${!state.activeConversationId && state.page === item.id ? 'active' : ''}" data-page="${item.id}">
-                <span class="nav-label">${escapeHtml(item.label)}</span>
-                <span class="nav-meta">${navMeta(item.id)}</span>
-              </button>
-            `,
-            )
-            .join('')}
+    <div class="agent-accordion ${expanded ? 'expanded' : ''}">
+      <button
+        class="nav-btn ${active ? 'active' : ''}"
+        data-nav-id="${agent.id}"
+        data-nav-type="agent"
+        data-nav-label="${escapeHtml(agent.name)}"
+        aria-expanded="${expanded ? 'true' : 'false'}"
+      >
+        <span class="nav-main">
+          <span class="nav-label">${escapeHtml(agent.icon)} ${escapeHtml(agent.name)}</span>
+          <span class="nav-meta">近期会话与新建入口</span>
+        </span>
+        <span class="nav-caret" aria-hidden="true">${expanded ? '-' : '+'}</span>
+      </button>
+      <div class="accordion-body">
+        <div class="accordion-inner">
+          <button class="link-btn mini-action" data-action="new-conversation" data-nav-id="${agent.id}">+ 新建会话</button>
+          <div class="simple-list">
+            ${renderConversationLinks(agent.id)}
+          </div>
         </div>
       </div>
-      <div>
-        <div class="nav-group-title">主题会话</div>
-        <div class="simple-list">
-          ${recentChats
-            .map(
-              (item) => `
-                <button class="link-btn chat-link ${state.activeConversationId === item.id ? 'active' : ''}" data-page="${item.page}" data-conversation="${item.id}">
-                  <span class="chat-link-top">
-                    <span class="chat-link-title">${escapeHtml(item.title)}</span>
-                    <span class="chat-link-time">${escapeHtml(item.time)}</span>
+    </div>
+  `;
+}
+
+function renderLeftNav() {
+  const tab = activeTab();
+  return `
+    <aside class="left-nav">
+      <div class="left-nav-scrollable">
+        <section>
+          <div class="nav-group-title">主导航</div>
+          <div class="agent-accordion ${state.expandedAgentId === 'home' ? 'expanded' : ''}">
+            <button
+              class="nav-btn ${isConversationTab() && activeAgentId() === 'home' ? 'active' : ''}"
+              data-nav-id="home"
+              data-nav-type="home"
+              data-nav-label="今日工作台"
+              aria-expanded="${state.expandedAgentId === 'home' ? 'true' : 'false'}"
+            >
+              <span class="nav-main">
+                <span class="nav-label">🏠 今日工作台</span>
+                <span class="nav-meta">今日重点与对话入口</span>
+              </span>
+              <span class="nav-caret" aria-hidden="true">${state.expandedAgentId === 'home' ? '-' : '+'}</span>
+            </button>
+            <div class="accordion-body">
+              <div class="accordion-inner">
+                <button class="link-btn mini-action" data-action="new-conversation" data-nav-id="home">+ 新建会话</button>
+                <div class="simple-list">
+                  ${renderConversationLinks('home')}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section>
+          <div class="nav-group-title">智能体</div>
+          <div class="nav-list">
+            ${state.agents.map((agent) => renderAgentNavItem(agent)).join('')}
+            <button class="nav-btn nav-create-agent" data-action="open-create-agent">
+              <span class="nav-main">
+                <span class="nav-label">新建智能体</span>
+                <span class="nav-meta">选配技能、授权与消息渠道</span>
+              </span>
+              <span class="nav-caret" aria-hidden="true">+</span>
+            </button>
+          </div>
+        </section>
+        <section>
+          <div class="nav-group-title">工具</div>
+          <div class="nav-list">
+            ${(navigationGroups.tools || [])
+              .map(
+                (item) => `
+                <button
+                  class="nav-btn ${tab?.id === item.id && tab?.type === item.type ? 'active' : ''}"
+                  data-nav-id="${item.id}"
+                  data-nav-type="${item.type}"
+                  data-nav-label="${escapeHtml(item.label)}"
+                >
+                  <span class="nav-main">
+                    <span class="nav-label">${escapeHtml(item.icon)} ${escapeHtml(item.label)}</span>
+                    <span class="nav-meta">${navMeta(item.id)}</span>
                   </span>
-                </button>`,
-            )
-            .join('')}
-        </div>
+                </button>
+              `,
+              )
+              .join('')}
+          </div>
+        </section>
       </div>
     </aside>
   `;
@@ -2603,8 +2843,10 @@ function navMeta(page) {
     case 'analysis': return '查数、归因、建议';
     case 'risk': return '门店风险识别与处理';
     case 'tasks': return '执行闭环与回看';
-    case 'reports': return '日报、周报与专题';
-    case 'push': return '定时与规则推送编排';
+    case 'skills': return '安装与管理技能';
+    case 'connectors': return '外部系统授权';
+    case 'channels': return '推送渠道配置';
+    case 'automation': return '定时任务与执行日志';
     default: return '';
   }
 }
@@ -2815,23 +3057,43 @@ function renderStructuredCard(card) {
   }
 }
 
-function renderConversation(conversation) {
+function renderConversation(conversation, options = {}) {
+  if (options.isDraft) {
+    return `
+      <section class="card conversation-workspace">
+        <header class="conversation-header conversation-only">
+          <div class="conversation-header-left">
+            <h2>新会话</h2>
+            <p class="conversation-subtitle">输入问题后开始新的分析、风险处理或任务协同。</p>
+          </div>
+        </header>
+        <div class="conversation-composer conversation-only">
+          <div class="composer-input">输入消息...（Shift+Enter 换行，输入 @ 可引用历史记录）</div>
+          <button class="primary-btn" data-action="noop">发送</button>
+        </div>
+      </section>
+    `;
+  }
+
   const mainActions = mainActionsForConversation(conversation);
   const navActions = navActionsForConversation(conversation);
 
   if (conversation.messages?.length) {
     return `
       <section class="card conversation-workspace">
-        <div class="conversation-head">
-          <div>
+        <header class="conversation-header">
+          <div class="conversation-header-left">
             <h2>${escapeHtml(conversation.title || '默认对话流')}</h2>
-            ${conversation.meta ? `<p class="helper-text">${escapeHtml(conversation.meta)}</p>` : ''}
+            ${conversation.meta ? `<p class="conversation-subtitle">${escapeHtml(conversation.meta)}</p>` : ''}
           </div>
-          <div class="conversation-actions">
-            <button class="secondary-btn" data-action="noop">生成简报</button>
-            <button class="secondary-btn" data-action="noop">同步协作</button>
+          <div class="conversation-header-right">
+            <span class="conversation-badge">对话</span>
+            <div class="conversation-actions">
+              <button class="secondary-btn" data-action="noop">生成简报</button>
+              <button class="secondary-btn" data-action="noop">同步协作</button>
+            </div>
           </div>
-        </div>
+        </header>
         <div class="conversation-thread">
           ${conversation.messages
             .map(
@@ -2919,13 +3181,6 @@ function renderConversation(conversation) {
   `;
 }
 
-function renderAnalysis(page) {
-  return `
-    ${renderRoleFocus('analysis', page)}
-    ${renderConversation(page.conversation)}
-  `;
-}
-
 function renderTable(table) {
   return `
     <section class="card table-wrap">
@@ -2940,61 +3195,277 @@ function renderTable(table) {
   `;
 }
 
-function renderRisk(page) {
+function renderTabBar() {
   return `
-    ${renderRoleFocus('risk', page)}
-    ${renderConversation(page.conversation)}
+    <div class="workspace-tabs">
+      ${state.tabs
+        .map(
+          (tab) => `
+            <button class="workspace-tab ${tab.id === state.activeTabId ? 'active' : ''}" data-tab-id="${tab.id}">
+              <span class="workspace-tab-label">${escapeHtml(tab.label)}</span>
+              ${tab.closable ? `<span class="tab-close" data-close-tab="${tab.id}" aria-label="关闭标签页">×</span>` : ''}
+            </button>
+          `,
+        )
+        .join('')}
+    </div>
   `;
 }
 
-function renderTasks(page) {
+function renderMainFrame(body, mode = 'conversation') {
   return `
-    ${renderRoleFocus('tasks', page)}
-    ${renderConversation(page.conversation)}
+    <main class="main-pane ${mode === 'management' ? 'management' : ''}">
+      ${renderTabBar()}
+      <div class="main-pane-body">
+        ${body}
+      </div>
+    </main>
   `;
 }
 
-function renderReports(page) {
+function renderAgentTab(agentId, conversationId = null) {
+  const page = pages[agentId];
+  const tab = activeTab();
+  const conversation = conversationId ? conversations[conversationId] : page?.conversation;
+  const showFocus = tab?.type === 'agent' && !tab?.isDraft && tab?.id === agentId;
+  return renderMainFrame(`
+    ${showFocus && page?.focus ? renderRoleFocus(agentId, page) : ''}
+    ${renderConversation(conversation || page?.conversation || pages.home.conversation, { isDraft: Boolean(tab?.isDraft) })}
+  `);
+}
+
+function renderHomeTab() {
+  const page = pages.home;
+  const tab = activeTab();
+  const showFocus = tab?.type === 'home' && !tab?.isDraft && tab?.id === 'home';
+  return renderMainFrame(`
+    ${showFocus ? renderRoleFocus('home', page) : ''}
+    ${renderConversation(page.conversation, { isDraft: Boolean(tab?.isDraft) })}
+  `);
+}
+
+function formatUsedBy(usedBy) {
+  if (!usedBy.length) return '暂未被智能体调用';
+  return usedBy.map((agentId) => getAgentById(agentId)?.name || agentId).join(' · ');
+}
+
+function toggleDraftSelection(key, value) {
+  const next = new Set(state.createAgentDraft[key]);
+  if (next.has(value)) next.delete(value);
+  else next.add(value);
+  state.createAgentDraft[key] = Array.from(next);
+}
+
+function renderChecklist(name, items, sourceKey) {
   return `
-    ${renderRoleFocus('reports', page)}
-    ${renderConversation(page.conversation)}
+    <section class="modal-section">
+      <h3>${escapeHtml(name)}</h3>
+      ${items
+        .map(
+          (item) => `
+            <label class="modal-check">
+              <input
+                type="checkbox"
+                data-draft-group="${sourceKey}"
+                data-draft-value="${item.id}"
+                ${state.createAgentDraft[sourceKey].includes(item.id) ? 'checked' : ''}
+              />
+              <span>${escapeHtml(item.name)}</span>
+            </label>
+          `,
+        )
+        .join('')}
+    </section>
   `;
 }
 
-function renderPush(page) {
+function renderSkillMarket() {
   return `
-    ${renderRoleFocus('push', page)}
-    ${renderConversation(page.conversation)}
+    <section class="config-grid">
+      ${state.skillMarket
+        .map(
+          (item) => `
+            <article class="config-card">
+              <div class="config-card-head">
+                <strong>${escapeHtml(item.icon)} ${escapeHtml(item.name)}</strong>
+                <span class="status-badge ${item.installed ? 'ok' : 'warn'}">${item.installed ? '已安装' : '未安装'}</span>
+              </div>
+              <p>${escapeHtml(item.desc)}</p>
+              <p class="used-by">调用方：${escapeHtml(formatUsedBy(item.usedBy))}</p>
+              <button class="secondary-btn" data-action="install-skill" data-item-id="${item.id}">${item.installed ? '已安装' : '安装'}</button>
+            </article>
+          `,
+        )
+        .join('')}
+    </section>
   `;
 }
 
-function renderHome(page) {
+function renderConnectors() {
   return `
-    ${renderRoleFocus('home', page)}
-    ${renderConversation(page.conversation)}
+    <section class="config-grid">
+      ${state.connectors
+        .map(
+          (item) => `
+            <article class="config-card connector-card">
+              <div class="config-card-head">
+                <strong>${escapeHtml(item.name)}</strong>
+                <span class="status-badge ${item.status === 'connected' ? 'ok' : 'warn'}">${escapeHtml(item.status)}</span>
+              </div>
+              <p>${escapeHtml(item.desc)}</p>
+              ${item.connectedAt ? `<p>连接时间：${escapeHtml(item.connectedAt)}</p>` : ''}
+              <p class="used-by">调用方：${escapeHtml(formatUsedBy(item.usedBy))}</p>
+              <button class="secondary-btn" data-action="connect-connector" data-item-id="${item.id}">${item.status === 'connected' ? '已连接' : '连接'}</button>
+            </article>
+          `,
+        )
+        .join('')}
+    </section>
   `;
+}
+
+function renderChannels() {
+  return `
+    <section class="config-grid">
+      ${state.channels
+        .map(
+          (item) => `
+            <article class="config-card channel-card">
+              <div class="config-card-head">
+                <strong>${escapeHtml(item.name)}</strong>
+                <span class="status-badge ${item.status === 'enabled' ? 'ok' : 'warn'}">${escapeHtml(item.status)}</span>
+              </div>
+              <p>${escapeHtml(item.desc)}</p>
+              <p class="used-by">调用方：${escapeHtml(formatUsedBy(item.usedBy))}</p>
+              <button class="secondary-btn" data-action="toggle-channel" data-item-id="${item.id}">${item.status === 'enabled' ? '已启用' : '启用'}</button>
+            </article>
+          `,
+        )
+        .join('')}
+    </section>
+  `;
+}
+
+function filteredAutomationTasks() {
+  return automationTasks.filter((task) => {
+    const agentOk = state.automationFilterAgentId ? task.agentId === state.automationFilterAgentId : true;
+    const kindOk = state.automationFilterKind ? task.kind === state.automationFilterKind : true;
+    return agentOk && kindOk;
+  });
+}
+
+function renderAutomationDetail(taskId) {
+  const task = automationTasks.find((item) => item.id === taskId);
+  if (!task) {
+    state.automationDetailId = null;
+    return renderAutomation();
+  }
+
+  return renderMainFrame(`
+    <section class="card automation-card">
+      <div class="automation-header">
+        <button class="secondary-btn" data-action="close-automation-detail">返回列表</button>
+        <h2>${escapeHtml(task.title)}</h2>
+      </div>
+      <div class="section-stack">
+        <div class="detail-card">
+          <header>
+            <strong>${escapeHtml(task.agentName)}</strong>
+            <span class="status-badge ${statusTone(task.status)}">${escapeHtml(task.status)}</span>
+          </header>
+          <p>频率：${escapeHtml(task.schedule)}</p>
+          <p>渠道：${escapeHtml(task.channel)}</p>
+          <p>说明：${escapeHtml(task.desc)}</p>
+          <p>最近执行：${escapeHtml(task.lastTrigger)}</p>
+        </div>
+        <section class="card">
+          <h2>执行历史</h2>
+          <div class="section-stack">
+            ${task.history
+              .map(
+                (item) => `
+                  <div class="list-card automation-history-card">
+                    <header>
+                      <strong>${escapeHtml(item.title)}</strong>
+                      <span class="status-badge ${statusTone(item.status)}">${escapeHtml(item.status)}</span>
+                    </header>
+                    <p>${escapeHtml(item.date)}</p>
+                    ${task.kind === 'report' ? `
+                      <div class="automation-history-actions">
+                        <button class="secondary-btn" type="button">立即查看</button>
+                        <button class="secondary-btn" type="button">下载</button>
+                      </div>
+                    ` : ''}
+                  </div>
+                `,
+              )
+              .join('')}
+          </div>
+        </section>
+      </div>
+    </section>
+  `, 'management');
+}
+
+function renderAutomation() {
+  if (state.automationDetailId) {
+    return renderAutomationDetail(state.automationDetailId);
+  }
+
+  return renderMainFrame(`
+    <section class="card automation-card">
+      <div class="automation-header">
+        <h2>⏰ 定时任务</h2>
+        <div class="filter-chip-row">
+          <button class="chip ${state.automationFilterAgentId ? 'active' : ''}" data-action="clear-automation-filter">
+            ${state.automationFilterAgentId ? `${getAgentById(state.automationFilterAgentId)?.name || state.automationFilterAgentId} ×` : '全部'}
+          </button>
+        </div>
+      </div>
+      <table class="automation-table">
+        <thead>
+          <tr>
+            <th>任务名</th>
+            <th>频率</th>
+            <th>总次</th>
+            <th>成功</th>
+            <th>失败</th>
+            <th>最近执行</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${filteredAutomationTasks()
+            .map(
+              (task) => `
+                <tr>
+                  <td>${escapeHtml(task.title)}</td>
+                  <td>${escapeHtml(task.schedule)}</td>
+                  <td>${escapeHtml(String(task.totalRuns))}</td>
+                  <td>${escapeHtml(String(task.successRuns))}</td>
+                  <td>${escapeHtml(String(task.failedRuns))}</td>
+                  <td>${escapeHtml(task.lastTrigger)}</td>
+                  <td><button class="secondary-btn" data-action="open-automation-detail" data-task-id="${task.id}">详情</button></td>
+                </tr>
+              `,
+            )
+            .join('')}
+        </tbody>
+      </table>
+    </section>
+  `, 'management');
 }
 
 function renderMain() {
-  const conversation = activeConversation();
-  if (conversation) {
-    return `<main class="main-pane conversation-only">${renderConversation(conversation)}</main>`;
-  }
-
-  const page = pages[state.page];
-  const body = (() => {
-    switch (state.page) {
-      case 'home': return renderHome(page);
-      case 'analysis': return renderAnalysis(page);
-      case 'risk': return renderRisk(page);
-      case 'tasks': return renderTasks(page);
-      case 'reports': return renderReports(page);
-      case 'push': return renderPush(page);
-      default: return renderHome(pages.home);
-    }
-  })();
-
-  return `<main class="main-pane">${body}</main>`;
+  const tab = activeTab();
+  if (tab?.type === 'home') return renderHomeTab();
+  if (tab?.type === 'agent') return renderAgentTab(tab.agentId);
+  if (tab?.type === 'history') return renderAgentTab(tab.agentId, tab.conversationId);
+  if (tab?.id === 'skills') return renderMainFrame(renderSkillMarket(), 'management');
+  if (tab?.id === 'connectors') return renderMainFrame(renderConnectors(), 'management');
+  if (tab?.id === 'channels') return renderMainFrame(renderChannels(), 'management');
+  if (tab?.type === 'automation') return renderAutomation();
+  return renderHomeTab();
 }
 
 function panelLabel(key) {
@@ -3024,9 +3495,8 @@ function renderPanelActions(item) {
   `;
 }
 
-function renderPanelContent() {
+function renderPanelContent(items = []) {
   const key = state.panelTab;
-  const items = panelItemsForCurrentPage();
   return items.map((item) => {
     if (key === 'reports') {
       return `
@@ -3093,80 +3563,308 @@ function renderPanelContent() {
 }
 
 function renderRightPanel() {
+  if (isManagementTab()) {
+    return '';
+  }
+
+  const context = panelContext();
   const tabs = [
-    { id: 'tasks', label: '任务' },
-    { id: 'alerts', label: '提醒' },
-    { id: 'reports', label: '报告' },
+    { id: 'tasks', label: '任务', hint: '执行闭环' },
+    { id: 'alerts', label: '提醒', hint: '异常待处理' },
+    { id: 'reports', label: '报告', hint: '沉淀结果' },
   ];
+  const counts = Object.fromEntries(tabs.map((tab) => [tab.id, panelItemsForTab(tab.id).length]));
   return `
-    <aside class="right-panel">
-      <div>
-        <div class="nav-group-title">沉淀结果</div>
-        <div class="panel-tabs">
-          ${tabs.map((tab) => `<button class="tab-btn ${state.panelTab === tab.id ? 'active' : ''}" data-tab="${tab.id}">${escapeHtml(tab.label)}</button>`).join('')}
-        </div>
+    <aside class="right-panel fade-in">
+      <div class="panel-header">
+        <div class="panel-context-label">${escapeHtml(context.title)}</div>
+        <div class="panel-context-meta">当前角色视角 · ${escapeHtml(appMeta.role)}</div>
+      </div>
+      <div class="panel-tabs" role="tablist" aria-label="右侧面板切换">
+        ${tabs.map((tab) => `
+          <button class="tab-btn ${state.panelTab === tab.id ? 'active' : ''}" data-panel-tab="${tab.id}" role="tab" aria-selected="${state.panelTab === tab.id ? 'true' : 'false'}">
+            <span class="tab-btn-top">
+              <span class="tab-btn-label">${escapeHtml(tab.label)}</span>
+              <span class="tab-badge">${counts[tab.id]}</span>
+            </span>
+            <span class="tab-btn-hint">${escapeHtml(tab.hint)}</span>
+          </button>
+        `).join('')}
       </div>
       <div class="panel-body">
-        ${renderPanelContent()}
+        ${renderPanelContent(context.items)}
       </div>
       <div class="panel-footer">
-        <button class="secondary-btn" data-page="${state.page}">查看全部${panelLabel(state.panelTab)}</button>
+        <button class="secondary-btn" data-action="view-all-panel-items">查看全部</button>
       </div>
     </aside>
   `;
+}
+
+function renderWorkspace() {
+  const managementLayout = isManagementTab() ? ' style="grid-template-columns: 260px minmax(0,1fr);"' : '';
+  return `
+    <div class="workspace ${isManagementTab() ? 'workspace--management' : 'workspace--conversation'}"${managementLayout}>
+      ${renderLeftNav()}
+      ${renderMain()}
+      ${renderRightPanel()}
+    </div>
+  `;
+}
+
+function renderCreateAgentModal() {
+  if (!state.isCreateAgentModalOpen) return '';
+
+  return `
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-head">
+          <h2>新建智能体</h2>
+          <button class="icon-btn" data-action="close-create-agent">×</button>
+        </div>
+        <label class="modal-field">
+          <span>名称</span>
+          <input value="${escapeHtml(state.createAgentDraft.name)}" data-draft-field="name" />
+        </label>
+        <label class="modal-field">
+          <span>描述</span>
+          <input value="${escapeHtml(state.createAgentDraft.desc)}" data-draft-field="desc" />
+        </label>
+        <label class="modal-field">
+          <span>图标</span>
+          <input value="${escapeHtml(state.createAgentDraft.icon)}" data-draft-field="icon" />
+        </label>
+        ${renderChecklist('选择技能', state.skillMarket, 'skills')}
+        ${renderChecklist('应用授权', state.connectors, 'connectors')}
+        ${renderChecklist('消息渠道', state.channels, 'channels')}
+        <div class="modal-actions">
+          <button class="secondary-btn" data-action="close-create-agent">取消</button>
+          <button class="primary-btn" data-action="submit-create-agent">创建智能体</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function normalizeAgentId(name) {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-\u4e00-\u9fa5]/g, '') || `agent-${Date.now()}`;
+}
+
+function applyUsedBySelection(collection, ids, agentId) {
+  collection.forEach((item) => {
+    if (ids.includes(item.id) && !item.usedBy.includes(agentId)) {
+      item.usedBy.push(agentId);
+    }
+  });
+}
+
+function submitCreateAgent() {
+  const agentId = normalizeAgentId(state.createAgentDraft.name);
+  const agent = {
+    id: agentId,
+    name: state.createAgentDraft.name || '未命名智能体',
+    icon: state.createAgentDraft.icon || '🧠',
+    desc: state.createAgentDraft.desc || '新建 Demo 智能体',
+    skills: state.skillMarket
+      .filter((item) => state.createAgentDraft.skills.includes(item.id))
+      .map((item) => item.name),
+    connectors: [...state.createAgentDraft.connectors],
+    channels: [...state.createAgentDraft.channels],
+  };
+
+  state.agents.push(agent);
+  applyUsedBySelection(state.skillMarket, state.createAgentDraft.skills, agentId);
+  applyUsedBySelection(state.connectors, state.createAgentDraft.connectors, agentId);
+  applyUsedBySelection(state.channels, state.createAgentDraft.channels, agentId);
+  state.createAgentDraft = {
+    name: '',
+    desc: '',
+    icon: '🧠',
+    skills: [],
+    connectors: [],
+    channels: [],
+  };
+  state.isCreateAgentModalOpen = false;
+  openTab(agentId, 'agent', agent.name, { agentId, conversationId: null });
+  showToast('智能体已创建（Demo）');
+}
+
+function refreshApp() {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (document.startViewTransition && !reduceMotion) {
+    document.startViewTransition(() => renderApp());
+    return;
+  }
+  renderApp();
 }
 
 function renderApp() {
   app.innerHTML = `
     <div class="app-shell">
       ${renderTopBar()}
-      <div class="workspace">
-        ${renderLeftNav()}
-        ${renderMain()}
-        ${renderRightPanel()}
-      </div>
+      ${renderWorkspace()}
+      ${renderCreateAgentModal()}
     </div>
   `;
 
-  app.querySelectorAll('[data-page]:not([data-conversation])').forEach((node) => {
-    node.addEventListener('click', () => {
-      const actionLabel = node.textContent.trim();
-      if (handleStructuredAction(actionLabel)) {
+  app.querySelectorAll('[data-nav-id][data-nav-type]').forEach((node) => {
+    node.addEventListener('click', (event) => {
+      const id = node.getAttribute('data-nav-id');
+      const type = node.getAttribute('data-nav-type');
+      const label = node.getAttribute('data-nav-label')
+        || (type === 'agent' ? getAgentById(id)?.name : navLabelMap[id])
+        || node.textContent.trim();
+
+      // 如果点击的是 accordion 头部按钮,切换展开状态
+      if (node.classList.contains('nav-btn') && node.querySelector('.nav-caret')) {
+        const isExpanded = state.expandedAgentId === id;
+        if (isExpanded) {
+          // 已经展开,执行跳转
+          openTab(id, type, label, {
+            agentId: type === 'agent' || type === 'home' ? id : null,
+            conversationId: null,
+          });
+        } else {
+          // 未展开,先展开
+          state.expandedAgentId = id;
+        }
+        refreshApp();
         return;
       }
 
-      const next = node.getAttribute('data-page');
-      state.page = next;
-      state.panelTab = pages[next].defaultPanel;
-      state.activeConversationId = null;
-      renderApp();
+      // 默认行为:打开标签页
+      openTab(id, type, label, {
+        agentId: type === 'agent' || type === 'home' ? id : null,
+        conversationId: null,
+      });
+      refreshApp();
+    });
+  });
+
+  app.querySelectorAll('[data-action="new-conversation"]').forEach((node) => {
+    node.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const agentId = node.getAttribute('data-nav-id');
+      openNewConversationTab(agentId);
+      refreshApp();
     });
   });
 
   app.querySelectorAll('[data-conversation]').forEach((node) => {
     node.addEventListener('click', () => {
-      const next = node.getAttribute('data-page');
+      const agentId = node.getAttribute('data-agent-id') || 'home';
       const conversationId = node.getAttribute('data-conversation');
-      state.page = next;
-      state.panelTab = pages[next].defaultPanel;
-      state.activeConversationId = conversationId;
-      renderApp();
+      setConversationContext(agentId, conversationId);
+      refreshApp();
     });
   });
 
-  app.querySelectorAll('[data-tab]').forEach((node) => {
+  app.querySelectorAll('[data-tab-id]').forEach((node) => {
+    node.addEventListener('click', (event) => {
+      if (event.target.closest('[data-close-tab]')) return;
+      state.activeTabId = node.getAttribute('data-tab-id');
+      syncLeftNav(state.activeTabId);
+      refreshApp();
+    });
+  });
+
+  app.querySelectorAll('[data-close-tab]').forEach((node) => {
+    node.addEventListener('click', (event) => {
+      event.stopPropagation();
+      closeTab(node.getAttribute('data-close-tab'));
+      refreshApp();
+    });
+  });
+
+  app.querySelectorAll('[data-panel-tab]').forEach((node) => {
     node.addEventListener('click', () => {
-      state.panelTab = node.getAttribute('data-tab');
-      renderApp();
+      state.panelTab = node.getAttribute('data-panel-tab');
+      refreshApp();
+    });
+  });
+
+  app.querySelectorAll('[data-action="open-create-agent"]').forEach((node) => {
+    node.addEventListener('click', () => {
+      state.isCreateAgentModalOpen = true;
+      refreshApp();
+    });
+  });
+
+  app.querySelectorAll('[data-action="install-skill"], [data-action="connect-connector"], [data-action="toggle-channel"]').forEach((node) => {
+    node.addEventListener('click', () => {
+      showToast(`已触发演示动作：${node.textContent.trim()}`);
+    });
+  });
+
+  app.querySelectorAll('[data-action="open-automation-detail"]').forEach((node) => {
+    node.addEventListener('click', () => {
+      state.automationDetailId = node.getAttribute('data-task-id');
+      refreshApp();
+    });
+  });
+
+  app.querySelectorAll('[data-action="close-automation-detail"]').forEach((node) => {
+    node.addEventListener('click', () => {
+      state.automationDetailId = null;
+      refreshApp();
+    });
+  });
+
+  app.querySelectorAll('[data-action="clear-automation-filter"]').forEach((node) => {
+    node.addEventListener('click', () => {
+      state.automationFilterAgentId = null;
+      state.automationFilterKind = null;
+      state.automationDetailId = null;
+      refreshApp();
+    });
+  });
+
+  app.querySelectorAll('[data-action="view-all-panel-items"]').forEach((node) => {
+    node.addEventListener('click', () => {
+      jumpToAutomationFromPanel();
+      refreshApp();
+    });
+  });
+
+  app.querySelectorAll('[data-action="close-create-agent"]').forEach((node) => {
+    node.addEventListener('click', () => {
+      state.isCreateAgentModalOpen = false;
+      refreshApp();
+    });
+  });
+
+  app.querySelectorAll('[data-draft-field]').forEach((node) => {
+    node.addEventListener('input', (event) => {
+      state.createAgentDraft[node.getAttribute('data-draft-field')] = event.target.value;
+    });
+  });
+
+  app.querySelectorAll('[data-draft-group]').forEach((node) => {
+    node.addEventListener('change', () => {
+      toggleDraftSelection(node.getAttribute('data-draft-group'), node.getAttribute('data-draft-value'));
+    });
+  });
+
+  app.querySelectorAll('[data-action="submit-create-agent"]').forEach((node) => {
+    node.addEventListener('click', () => {
+      submitCreateAgent();
+      refreshApp();
     });
   });
 
   app.querySelectorAll('[data-action="noop"]').forEach((node) => {
     node.addEventListener('click', () => {
+      if (handleStructuredAction(node.textContent.trim())) {
+        return;
+      }
       showToast(`已触发演示动作：${node.textContent.trim()}`);
     });
   });
 }
 
 
-renderApp();
+refreshApp();

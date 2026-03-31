@@ -1,0 +1,4 @@
+interface:
+  display_name: "Interview Demand Extractor"
+  short_description: "Extract interview needs and refresh BRD docs"
+  default_prompt: "Scan docs/interview, extract user needs, and update BRD-style requirement documents with mock-ready outputs."
