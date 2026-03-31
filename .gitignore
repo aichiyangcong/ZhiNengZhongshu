@@ -1,0 +1,7 @@
+.codex/skills
+temp/
+
+.DS_Store
+.vscode/settings.json
+.claude/settings.local.json
+node_modules/
